@@ -34,4 +34,4 @@ namespace cloud_storage::network {
     void Library::Deinitialize() {
         WSACleanup();
     }
-};
+} // namespace cloud_storage::network

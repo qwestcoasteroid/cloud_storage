@@ -18,4 +18,4 @@ namespace cloud_storage::network {
             Library::Deinitialize();
         }
     }
-} // cloud_storage::network
+} // namespace cloud_storage::network
