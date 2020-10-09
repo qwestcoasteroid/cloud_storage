@@ -1,26 +1,20 @@
 #include <iostream>
 
-#include "server.hpp"
-#include "client.hpp"
+#include "network/header/server.hpp"
+#include "network/header/client.hpp"
 
 int main() {
-    WSADATA wsa;
+    cloud_storage::network::Server server("43000");
 
-    WSAStartup(MAKEWORD(2, 2), &wsa);
-
-    Server server("43000");
-
-    Client client = server.Accept();
+    cloud_storage::network::Client client = server.Accept();
 
     char ipaddr[100];
 
-    getnameinfo(reinterpret_cast<const sockaddr *>(&client.GetConnectionInfo().m_address),
-        client.GetConnectionInfo().m_address_length, ipaddr,
+    getnameinfo(reinterpret_cast<const sockaddr *>(&client.GetConnectionInfo().address_),
+        client.GetConnectionInfo().address_length_, ipaddr,
         sizeof(ipaddr), nullptr, 0, NI_NUMERICHOST);
 
     std::cout << "Client [" << ipaddr << "] connected!\n\n";
-
-    WSACleanup();
 
     return 0;
 }

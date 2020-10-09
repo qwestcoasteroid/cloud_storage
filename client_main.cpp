@@ -1,13 +1,9 @@
 #include <iostream>
 
-#include "client.hpp"
+#include "network/header/client.hpp"
 
 int main() {
-    WSADATA wsa;
-
-    WSAStartup(MAKEWORD(2, 2), &wsa);
-
-    Client client("127.0.0.1", "43000");
+    cloud_storage::network::Client client("127.0.0.1", "43000");
 
     if (!client.Connect()) {
         std::cout << "Can't connect!\n\n";
@@ -15,8 +11,6 @@ int main() {
     else {
         std::cout << "Connected!\n\n";
     }
-
-    WSACleanup();
 
     return 0;
 }
