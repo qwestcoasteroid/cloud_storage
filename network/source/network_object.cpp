@@ -1,6 +1,6 @@
-#include "./header/network_object.hpp"
+#include "network_object.hpp"
 
-#include "./header/library.hpp"
+#include "library.hpp"
 
 namespace cloud_storage::network {
     NetworkObject::NetworkObject() {

@@ -1,7 +1,7 @@
 #ifndef CLOUD_STORAGE_NETWORK_LIBRARY_HPP_
 #define CLOUD_STORAGE_NETWORK_LIBRARY_HPP_
 
-#include "../../utility/header/targetver.hpp"
+#include "targetver.hpp"
 
 #include <winsock2.h>
 

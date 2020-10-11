@@ -1,5 +1,9 @@
 #include "client.hpp"
 
+#ifdef DEBUG_OUTPUT
+#include <iostream>
+#endif
+
 namespace cloud_storage::network {
     Client::Client() {}
 
@@ -12,20 +16,26 @@ namespace cloud_storage::network {
         addrinfo *peer_address;
 
         if (getaddrinfo(ip_address.data(), port.data(), &hints, &peer_address)) {
+#ifdef DEBUG_OUTPUT
+            std::cerr << "Error calling getaddrinfo() (" << WSAGetLastError() << ")\n";
+#endif
             // throw
         }
 
-        connection_info_.socket_ = socket(peer_address->ai_family,
+        connection_info_.socket = socket(peer_address->ai_family,
             peer_address->ai_socktype, peer_address->ai_protocol);
 
-        if (connection_info_.socket_ == INVALID_SOCKET) {
+        if (connection_info_.socket == INVALID_SOCKET) {
+#ifdef DEBUG_OUTPUT
+            std::cerr << "Error calling socket() (" << WSAGetLastError() << ")\n";
+#endif
             // throw
         }
 
-        CopyMemory(&connection_info_.address_, peer_address->ai_addr,
+        CopyMemory(&connection_info_.address, peer_address->ai_addr,
             peer_address->ai_addrlen);
 
-        connection_info_.address_length_ = peer_address->ai_addrlen;
+        connection_info_.address_length = peer_address->ai_addrlen;
 
         freeaddrinfo(peer_address);
     }
@@ -34,7 +44,7 @@ namespace cloud_storage::network {
         CopyMemory(&connection_info_, &client.connection_info_,
             sizeof(connection_info_));
 
-        client.connection_info_.socket_ = INVALID_SOCKET;
+        client.connection_info_.socket = INVALID_SOCKET;
     }
 
     Client& Client::operator=(Client &&client) noexcept {
@@ -45,14 +55,14 @@ namespace cloud_storage::network {
         CopyMemory(&connection_info_, &client.connection_info_,
             sizeof(connection_info_));
 
-        client.connection_info_.socket_ = INVALID_SOCKET;
+        client.connection_info_.socket = INVALID_SOCKET;
 
         return *this;
     }
 
     Client::~Client() {
-        if (connection_info_.socket_ != INVALID_SOCKET) {
-            closesocket(connection_info_.socket_);
+        if (connection_info_.socket != INVALID_SOCKET) {
+            closesocket(connection_info_.socket);
         }
     }
 
@@ -61,9 +71,12 @@ namespace cloud_storage::network {
     }
 
     bool Client::Connect() const {
-        if (connect(connection_info_.socket_,
-            reinterpret_cast<const sockaddr *>(&connection_info_.address_),
-            connection_info_.address_length_)) {
+        if (connect(connection_info_.socket,
+            reinterpret_cast<const sockaddr *>(&connection_info_.address),
+            connection_info_.address_length)) {
+#ifdef DEBUG_OUTPUT
+            std::cerr << "Error calling connect() (" << WSAGetLastError() << ")\n";
+#endif
             // throw
             return false;
         }
