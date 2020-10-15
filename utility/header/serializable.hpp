@@ -4,7 +4,7 @@
 namespace cloud_storage::utility {
     class Serializable {
     public:
-        virtual void Serialize() = 0;
+        virtual void Serialize() const = 0;
         virtual void Deserialize(const void *) = 0;
     };
 } // namespace cloud_storage::utility

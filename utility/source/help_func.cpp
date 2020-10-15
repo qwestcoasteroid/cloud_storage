@@ -2,7 +2,7 @@
 
 #include "ws2tcpip.h"
 
-bool IsLittleEndianness() {
+static bool IsLittleEndianness() {
     static const int value = 1;
 
     return *reinterpret_cast<const char *>(&value) == value;

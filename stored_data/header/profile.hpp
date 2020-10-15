@@ -13,7 +13,7 @@ namespace cloud_storage::stored_data {
     public:
         Profile() { header.data_type = network::DataType::kProfile; }
 
-        void Serialize() override;
+        void Serialize() const override;
         void Deserialize(const void *) override;
 
         std::string username;

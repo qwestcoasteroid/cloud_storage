@@ -1,4 +1,8 @@
-Create sender/receiver class
+Create sender/receiver class 
+    --(how do I know what to use (TCP/UDP)?)
 Continue creating 'stored_data' classes
-Think about using UDP connections for requests
+--Think about using UDP connections for requests
 Do I need request and respond classes?
+--Separate classes for TCP/UDP connections
+Add SSL code
+++Move 'ConnectionInfo' to 'NetworkObject'

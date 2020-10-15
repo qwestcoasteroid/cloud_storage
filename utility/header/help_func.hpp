@@ -10,6 +10,4 @@ namespace cloud_storage::utility {
     uint64_t ntohll(uint64_t value);
 } // namespace cloud_storage::utility
 
-
-
 #endif // CLOUD_STORAGE_UTILITY_HELP_FUNC_HPP_

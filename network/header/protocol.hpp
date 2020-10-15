@@ -11,13 +11,21 @@ namespace cloud_storage::network {
     };
 
     struct Header {
+        void HostRepresentation();
+        void NetworkRepresentation();
+
         size_t data_length{};
         DataType data_type;
     };
 
     struct TransmissionUnit {
-        Header header;
-        std::unique_ptr<void> data;
+        inline TransmissionUnit() {}
+        inline virtual ~TransmissionUnit() {}
+
+        TransmissionUnit(TransmissionUnit &&object) noexcept;
+
+        mutable Header header;
+        mutable std::unique_ptr<char> data;
     };
 } // namespace cloud_storage::network
 

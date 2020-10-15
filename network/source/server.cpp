@@ -2,7 +2,7 @@
 
 #ifdef DEBUG_OUTPUT
 #include <iostream>
-#endif
+#endif // DEBUG_OUTPUT
 
 #define QUEUE_SIZE 16
 
@@ -19,77 +19,82 @@ namespace cloud_storage::network {
 
         if (getaddrinfo(nullptr, port.data(), &hints, &bind_address)) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling getaddrinfo() (" << WSAGetLastError() << ")\n";
-#endif
+            std::cerr << "Error calling getaddrinfo() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
             // throw
         }
 
-        connection_info_.socket = socket(bind_address->ai_family,
+        socket_info_.socket = socket(bind_address->ai_family,
             bind_address->ai_socktype, bind_address->ai_protocol);
 
-        if (connection_info_.socket == INVALID_SOCKET) {
+        if (socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling socket() (" << WSAGetLastError() << ")\n";
-#endif
+            std::cerr << "Error calling socket() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
             // throw
         }
 
         int option = 0;
 
-        if (setsockopt(connection_info_.socket, IPPROTO_IPV6, IPV6_V6ONLY,
+        if (setsockopt(socket_info_.socket, IPPROTO_IPV6, IPV6_V6ONLY,
             reinterpret_cast<const char *>(&option), sizeof(option))) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling setsockopt() (" << WSAGetLastError() << ")\n";
-#endif
+            std::cerr << "Error calling setsockopt() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
             // throw
         }
 
-        if (bind(connection_info_.socket, bind_address->ai_addr,
+        if (bind(socket_info_.socket, bind_address->ai_addr,
             bind_address->ai_addrlen)) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling bind() (" << WSAGetLastError() << ")\n";
-#endif
+            std::cerr << "Error calling bind() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
             // throw
         }
 
-        if (listen(connection_info_.socket, QUEUE_SIZE) < 0) {
+        if (listen(socket_info_.socket, QUEUE_SIZE) < 0) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling listen() (" << WSAGetLastError() << ")\n";
-#endif
+            std::cerr << "Error calling listen() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
             // throw
         }
 
-        CopyMemory(&connection_info_.address, bind_address->ai_addr,
+        CopyMemory(&socket_info_.address, bind_address->ai_addr,
             bind_address->ai_addrlen);
 
-        connection_info_.address_length = bind_address->ai_addrlen;
+        socket_info_.address_length = bind_address->ai_addrlen;
+        socket_info_.socket_type = bind_address->ai_socktype;
 
         freeaddrinfo(bind_address);
     }
 
     Server::~Server() {
-        if (connection_info_.socket != INVALID_SOCKET) {
-            closesocket(connection_info_.socket);
+        if (socket_info_.socket != INVALID_SOCKET) {
+            closesocket(socket_info_.socket);
         }
-    }
-
-    const ConnectionInfo &Server::GetConnectionInfo() const {
-        return connection_info_;
     }
 
     Client Server::Accept() const {
         Client new_client;
 
-        new_client.connection_info_.socket = accept(connection_info_.socket,
-            reinterpret_cast<sockaddr *>(&new_client.connection_info_.address),
-            &new_client.connection_info_.address_length);
+        new_client.socket_info_.socket = accept(socket_info_.socket,
+            reinterpret_cast<sockaddr *>(&new_client.socket_info_.address),
+            &new_client.socket_info_.address_length);
 
-        if (new_client.connection_info_.socket == INVALID_SOCKET) {
+        if (new_client.socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling accept() (" << WSAGetLastError() << ")\n";
-#endif
+            std::cerr << "Error calling accept() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
             // throw
         }
+
+        new_client.socket_info_.socket_type = socket_info_.socket_type;
 
         return new_client;
     }

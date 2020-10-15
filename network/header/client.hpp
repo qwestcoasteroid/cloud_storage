@@ -4,7 +4,6 @@
 #include <string_view>
 
 #include "network_object.hpp"
-#include "connection_info.hpp"
 
 namespace cloud_storage::network {
     class Client : public NetworkObject {
@@ -18,14 +17,10 @@ namespace cloud_storage::network {
 
         bool Connect() const;
 
-        const ConnectionInfo &GetConnectionInfo() const;
-
         friend class Server;
 
     private:
         Client();
-
-        ConnectionInfo connection_info_;
     };
 } // namespace cloud_storage::network
 

@@ -2,7 +2,7 @@
 
 #ifdef DEBUG_OUTPUT
 #include <iostream>
-#endif
+#endif // DEBUG_OUTPUT
 
 namespace cloud_storage::network {
     Client::Client() {}
@@ -18,33 +18,34 @@ namespace cloud_storage::network {
         if (getaddrinfo(ip_address.data(), port.data(), &hints, &peer_address)) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling getaddrinfo() (" << WSAGetLastError() << ")\n";
-#endif
+#endif // DEBUG_OUTPUT
             // throw
         }
 
-        connection_info_.socket = socket(peer_address->ai_family,
+        socket_info_.socket = socket(peer_address->ai_family,
             peer_address->ai_socktype, peer_address->ai_protocol);
 
-        if (connection_info_.socket == INVALID_SOCKET) {
+        if (socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling socket() (" << WSAGetLastError() << ")\n";
-#endif
+#endif // DEBUG_OUTPUT
             // throw
         }
 
-        CopyMemory(&connection_info_.address, peer_address->ai_addr,
+        CopyMemory(&socket_info_.address, peer_address->ai_addr,
             peer_address->ai_addrlen);
 
-        connection_info_.address_length = peer_address->ai_addrlen;
+        socket_info_.address_length = peer_address->ai_addrlen;
+        socket_info_.socket_type = peer_address->ai_socktype;
 
         freeaddrinfo(peer_address);
     }
 
     Client::Client(Client &&client) noexcept {
-        CopyMemory(&connection_info_, &client.connection_info_,
-            sizeof(connection_info_));
+        CopyMemory(&socket_info_, &client.socket_info_,
+            sizeof(socket_info_));
 
-        client.connection_info_.socket = INVALID_SOCKET;
+        client.socket_info_.socket = INVALID_SOCKET;
     }
 
     Client& Client::operator=(Client &&client) noexcept {
@@ -52,31 +53,27 @@ namespace cloud_storage::network {
             return *this;
         }
 
-        CopyMemory(&connection_info_, &client.connection_info_,
-            sizeof(connection_info_));
+        CopyMemory(&socket_info_, &client.socket_info_,
+            sizeof(socket_info_));
 
-        client.connection_info_.socket = INVALID_SOCKET;
+        client.socket_info_.socket = INVALID_SOCKET;
 
         return *this;
     }
 
     Client::~Client() {
-        if (connection_info_.socket != INVALID_SOCKET) {
-            closesocket(connection_info_.socket);
+        if (socket_info_.socket != INVALID_SOCKET) {
+            closesocket(socket_info_.socket);
         }
     }
 
-    const ConnectionInfo &Client::GetConnectionInfo() const {
-        return connection_info_;
-    }
-
     bool Client::Connect() const {
-        if (connect(connection_info_.socket,
-            reinterpret_cast<const sockaddr *>(&connection_info_.address),
-            connection_info_.address_length)) {
+        if (connect(socket_info_.socket,
+            reinterpret_cast<const sockaddr *>(&socket_info_.address),
+            socket_info_.address_length)) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling connect() (" << WSAGetLastError() << ")\n";
-#endif
+#endif // DEBUG_OUTPUT
             // throw
             return false;
         }
