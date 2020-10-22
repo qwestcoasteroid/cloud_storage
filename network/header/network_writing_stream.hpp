@@ -3,6 +3,7 @@
 
 #include "basic_network_stream.hpp"
 #include "protocol.hpp"
+#include "serializable.hpp"
 
 namespace cloud_storage::network {
     class NetworkWritingStream : public BasicNetworkStream {
@@ -10,7 +11,7 @@ namespace cloud_storage::network {
         inline NetworkWritingStream(const Client &client) noexcept :
             BasicNetworkStream(client) {} 
 
-        void Write(const TransmissionUnit &data);
+        void Write(const TransmissionUnit &unit);
     };
 } // namespace cloud_storage::network
 

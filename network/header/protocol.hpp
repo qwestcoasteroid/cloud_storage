@@ -4,28 +4,33 @@
 #include <memory>
 
 namespace cloud_storage::network {
-    enum class DataType : unsigned int {
-        kFile           = 0xFF000000, kQuery          = 0xFE000000,
-        kAuthorization  = 0xFD000000, kRegistration   = 0xFC000000,
-        kProfile        = 0xFB000000
+    enum class DataType : uint16_t {
+        kFile           = 0xFF00, kQuery          = 0xFE00,
+        kAuthorization  = 0xFD00, kRegistration   = 0xFC00,
+        kProfile        = 0xFB00
+    };
+
+    enum class UnitType : uint16_t {
+        kRequest    = 0x80,
+        kRespond    = 0x40,
+        kError      = 0x20
     };
 
     struct Header {
-        void HostRepresentation();
-        void NetworkRepresentation();
-
-        size_t data_length{};
+        uint32_t data_length{};
         DataType data_type;
+        UnitType unit_type;
     };
 
     struct TransmissionUnit {
         inline TransmissionUnit() {}
         inline virtual ~TransmissionUnit() {}
 
-        TransmissionUnit(TransmissionUnit &&object) noexcept;
+        TransmissionUnit(TransmissionUnit &&unit) noexcept;
+        TransmissionUnit &operator=(TransmissionUnit &&unit) noexcept;
 
         mutable Header header;
-        mutable std::unique_ptr<char> data;
+        std::unique_ptr<char> data;
     };
 } // namespace cloud_storage::network
 

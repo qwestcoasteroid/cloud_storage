@@ -5,9 +5,16 @@
 #endif // DEBUG_OUTPUT
 
 #include "serializable.hpp"
+#include "help_tools.hpp"
 
 namespace cloud_storage::network {
-    static void SendDataStream(SOCKET socket, const char *buffer, size_t size) {
+    static void SendDataStream(SOCKET socket,
+        const char *buffer, size_t size) {
+
+        if (size == 0) {
+            return;
+        }
+
         int sent{ 0 };
 
         do {
@@ -26,18 +33,18 @@ namespace cloud_storage::network {
         } while (static_cast<size_t>(sent) != size);
     }
 
-    static void PerformStreamWriting(const SocketInfo &socket_info,
+    void PerformStreamWriting(const SocketInfo &socket_info,
         const TransmissionUnit &unit) {
 
-        dynamic_cast<const utility::Serializable &>(unit).Serialize(); // may throw
-
-        unit.header.NetworkRepresentation();
+        utility::ToNetworkRepresentation(unit.header.data_length,
+            unit.header.data_type);
         
         SendDataStream(socket_info.socket,
             reinterpret_cast<const char *>(&unit.header),
             sizeof(unit.header));
 
-        unit.header.HostRepresentation();
+        utility::ToHostRepresentation(unit.header.data_length,
+            unit.header.data_type);
         
         SendDataStream(socket_info.socket, unit.data.get(),
             unit.header.data_length);

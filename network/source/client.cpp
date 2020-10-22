@@ -17,7 +17,8 @@ namespace cloud_storage::network {
 
         if (getaddrinfo(ip_address.data(), port.data(), &hints, &peer_address)) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling getaddrinfo() (" << WSAGetLastError() << ")\n";
+            std::cerr << "Error calling getaddrinfo() ("
+                << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
             // throw
         }
@@ -27,7 +28,8 @@ namespace cloud_storage::network {
 
         if (socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling socket() (" << WSAGetLastError() << ")\n";
+            std::cerr << "Error calling socket() ("
+                << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
             // throw
         }
@@ -72,7 +74,8 @@ namespace cloud_storage::network {
             reinterpret_cast<const sockaddr *>(&socket_info_.address),
             socket_info_.address_length)) {
 #ifdef DEBUG_OUTPUT
-            std::cerr << "Error calling connect() (" << WSAGetLastError() << ")\n";
+            std::cerr << "Error calling connect() ("
+                << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
             // throw
             return false;

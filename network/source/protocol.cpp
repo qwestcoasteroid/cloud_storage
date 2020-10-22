@@ -1,20 +1,19 @@
 #include "protocol.hpp"
 
-#include <ws2tcpip.h>
-
 namespace cloud_storage::network {
-    void Header::HostRepresentation() {
-        data_length = htonl(data_length);
-        data_type = static_cast<DataType>(
-            htonl(static_cast<unsigned long>(data_type)));
-    }
+    TransmissionUnit::TransmissionUnit(TransmissionUnit &&unit) noexcept :
+        header(unit.header), data(std::move(unit.data)) {}
 
-    void Header::NetworkRepresentation() {
-        data_length = ntohl(data_length);
-        data_type = static_cast<DataType>(
-            ntohl(static_cast<unsigned long>(data_type)));
-    }
+    TransmissionUnit &TransmissionUnit::operator=
+        (TransmissionUnit &&unit) noexcept {
+        
+        if (&unit == this) {
+            return *this;
+        }
 
-    TransmissionUnit::TransmissionUnit(TransmissionUnit &&object) noexcept :
-        header(object.header), data(std::move(object.data)) {}
+        header = unit.header;
+        data = std::move(unit.data);
+        
+        return *this;
+    }
 } // namespace cloud_storage::network

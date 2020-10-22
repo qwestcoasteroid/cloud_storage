@@ -8,6 +8,8 @@
 namespace cloud_storage::network {
     class Library {
     public:
+        Library() = delete;
+
         static void Initialize();
         static void Deinitialize();
 

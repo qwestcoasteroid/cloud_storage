@@ -9,7 +9,7 @@ namespace cloud_storage::network {
         sockaddr_storage address{ 0 };
         socklen_t address_length{ sizeof(address) };
         SOCKET socket{ INVALID_SOCKET };
-        int socket_type{ -1 };
+        int socket_type{ ~0 };
     };
 
     class NetworkObject {

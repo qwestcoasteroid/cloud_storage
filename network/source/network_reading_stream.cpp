@@ -4,8 +4,14 @@
 #include <iostream>
 #endif // DEBUG_OUTPUT
 
+#include "help_tools.hpp"
+
 namespace cloud_storage::network {
     static void ReceiveDataStream(SOCKET socket, char *buffer, size_t size) {
+        if (size == 0) {
+            return;
+        }
+
         int received{ 0 };
 
         do {
@@ -36,12 +42,31 @@ namespace cloud_storage::network {
         ReceiveDataStream(socket_info.socket,
             reinterpret_cast<char *>(&unit.header), sizeof(unit.header));
 
-        unit.header.HostRepresentation();
+        utility::ToHostRepresentation(unit.header.data_length,
+            unit.header.data_type);
 
         unit.data.reset(new char[unit.header.data_length]);
 
         ReceiveDataStream(socket_info.socket, unit.data.get(),
             unit.header.data_length);
-        
+    }
+
+    TransmissionUnit NetworkReadingStream::Read() {
+        TransmissionUnit result;
+
+        switch (client_->GetSocketInfo().socket_type) {
+        case SOCK_STREAM:
+            PerformStreamReading(client_->GetSocketInfo(), result);
+            break;
+        default:
+#ifdef DEBUG_OUTPUT
+                std::cerr << "Unknown protocol used while"
+                    "performing reading operation!\n";
+#endif // DEBUG_OUTPUT
+            // throw
+            break;
+        }
+
+        return result;
     }
 } // namespace cloud_storage::network

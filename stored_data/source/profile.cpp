@@ -2,34 +2,58 @@
 
 #include <cstring>
 
-#include "help_func.hpp"
+#include "help_tools.hpp"
 
 namespace cloud_storage::stored_data {
-    void Profile::Serialize() const {
-        header.data_length = 0;
+    Profile::Profile(const network::TransmissionUnit &unit) {
+        if (unit.header.data_type != network::DataType::kProfile) {
+            // throw
+        }
 
-        header.data_length += username.size() + 1;
-        header.data_length += sizeof(max_storage);
-        header.data_length += sizeof(used_storage);
+        Deserialize(unit.data.get());
+    }
 
-        data.reset(new char[header.data_length]);
+    network::TransmissionUnit Profile::Serialize() const {
+        network::TransmissionUnit result;
 
-        char *buffer = data.get();
+        result.header.data_type = network::DataType::kProfile;
+
+        result.header.data_length = 0;
+
+        result.header.data_length += username.size() + 1;
+        result.header.data_length += sizeof(max_storage);
+        result.header.data_length += sizeof(used_storage);
+
+        result.data.reset(new char[result.header.data_length]);
+
+        char *buffer = result.data.get();
 
         std::strcpy(buffer, username.c_str());
         buffer += username.size() + 1;
-        *reinterpret_cast<decltype(max_storage) *>(buffer) = utility::htonll(max_storage);
+        *reinterpret_cast<decltype(max_storage) *>(buffer) =
+            utility::htonll(max_storage);
         buffer += sizeof(max_storage);
-        *reinterpret_cast<decltype(used_storage) *>(buffer) = utility::htonll(used_storage);
+        *reinterpret_cast<decltype(used_storage) *>(buffer) =
+            utility::htonll(used_storage);
+
+        return result;
     }
 
-    void Profile::Deserialize(const void *bytes) {
-        const char *buffer = reinterpret_cast<const char *>(bytes);
+    Profile &Profile::Deserialize(const void *buffer) {
+        if (buffer == nullptr) {
+            return *this;
+        }
 
-        username = std::string(buffer);
-        buffer += username.size() + 1;
-        max_storage = utility::ntohll(*reinterpret_cast<const decltype(max_storage) *>(buffer));
-        buffer += sizeof(max_storage);
-        used_storage = utility::ntohll(*reinterpret_cast<const decltype(used_storage) *>(buffer));
+        const char *buffer_ptr = reinterpret_cast<const char *>(buffer);
+
+        username = std::string(buffer_ptr);
+        buffer_ptr += username.size() + 1;
+        max_storage = utility::ntohll(
+            *reinterpret_cast<const decltype(max_storage) *>(buffer_ptr));
+        buffer_ptr += sizeof(max_storage);
+        used_storage = utility::ntohll(
+            *reinterpret_cast<const decltype(used_storage) *>(buffer_ptr));
+
+        return *this;
     }
-}
+} // namespace cloud_storage::stored_data

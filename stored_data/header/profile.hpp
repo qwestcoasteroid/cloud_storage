@@ -9,12 +9,13 @@
 // TODO: Define valid fields
 
 namespace cloud_storage::stored_data {
-    class Profile : public utility::Serializable, public network::TransmissionUnit {
+    class Profile : public utility::Serializable {
     public:
-        Profile() { header.data_type = network::DataType::kProfile; }
+        inline Profile() noexcept {}
+        Profile(const network::TransmissionUnit &unit);
 
-        void Serialize() const override;
-        void Deserialize(const void *) override;
+        network::TransmissionUnit Serialize() const override;
+        Profile &Deserialize(const void *buffer) override;
 
         std::string username;
         uint64_t max_storage{};

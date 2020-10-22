@@ -98,4 +98,4 @@ namespace cloud_storage::network {
 
         return new_client;
     }
-}; // namespace cloud_storage::network
+} // namespace cloud_storage::network
