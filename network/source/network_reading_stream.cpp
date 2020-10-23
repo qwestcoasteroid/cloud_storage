@@ -38,17 +38,22 @@ namespace cloud_storage::network {
 
     void PerformStreamReading(const SocketInfo &socket_info,
         TransmissionUnit &unit) {
-        
+
         ReceiveDataStream(socket_info.socket,
-            reinterpret_cast<char *>(&unit.header), sizeof(unit.header));
+            reinterpret_cast<char *>(&unit.GetHeader()),
+            sizeof(unit.GetHeader()));
 
-        utility::ToHostRepresentation(unit.header.data_length,
-            unit.header.data_type);
+        unit.GetHeader().data_length =
+            service::ToHostRepresentation(unit.GetHeader().data_length);
+        unit.GetHeader().data_type =
+            service::ToHostRepresentation(unit.GetHeader().data_type);
+        unit.GetHeader().unit_type =
+            service::ToHostRepresentation(unit.GetHeader().unit_type);
 
-        unit.data.reset(new char[unit.header.data_length]);
+        unit.SetData(nullptr, unit.GetHeader().data_length);
 
-        ReceiveDataStream(socket_info.socket, unit.data.get(),
-            unit.header.data_length);
+        ReceiveDataStream(socket_info.socket, unit.GetData().get(),
+            unit.GetHeader().data_length);
     }
 
     TransmissionUnit NetworkReadingStream::Read() {

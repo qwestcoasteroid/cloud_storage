@@ -19,23 +19,21 @@ int main() {
         cloud_storage::network::NetworkWritingStream writer(client);
 
         do {
-            cloud_storage::network::TransmissionUnit unit;
-
-            unit.header.data_type = cloud_storage::network::DataType::kProfile;
-            unit.header.unit_type = cloud_storage::network::UnitType::kRequest;
+            auto unit = cloud_storage::network::MakeRequest(
+                cloud_storage::network::DataType::kProfile, "sakuyamaxanadu");
 
             writer.Write(unit);
 
             unit = reader.Read();
 
-            if (unit.header.unit_type == cloud_storage::network::UnitType::kError) {
+            if (unit.GetHeader().unit_type == cloud_storage::network::UnitType::kError) {
                 std::cerr << "Bad request!" << std::endl;
                 continue;
             }
 
             cloud_storage::stored_data::Profile profile(unit);
 
-            if (unit.header.data_type == cloud_storage::network::DataType::kProfile) {
+            if (unit.GetHeader().data_type == cloud_storage::network::DataType::kProfile) {
                 std::cout << "Profile received!" << std::endl;
             }
 

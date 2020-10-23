@@ -2,6 +2,9 @@
 #define CLOUD_STORAGE_NETWORK_PROTOCOL_HPP_
 
 #include <memory>
+#include <string_view>
+
+// TODO: MakeError - send error code instead of message
 
 namespace cloud_storage::network {
     enum class DataType : uint16_t {
@@ -22,16 +25,50 @@ namespace cloud_storage::network {
         UnitType unit_type;
     };
 
-    struct TransmissionUnit {
-        inline TransmissionUnit() {}
+    class TransmissionUnit {
+    public:
+        inline TransmissionUnit() noexcept {}
         inline virtual ~TransmissionUnit() {}
 
         TransmissionUnit(TransmissionUnit &&unit) noexcept;
         TransmissionUnit &operator=(TransmissionUnit &&unit) noexcept;
 
-        mutable Header header;
-        std::unique_ptr<char> data;
+        inline const Header &GetHeader() const;
+        inline Header &GetHeader();
+        inline const std::shared_ptr<char> GetData() const;
+        inline std::shared_ptr<char> GetData();
+
+        inline void SetHeader(Header _header);
+        void SetData(const std::shared_ptr<char> _buffer, size_t _size);
+
+    private:
+        Header header_;
+        std::shared_ptr<char> data_;
     };
+
+    TransmissionUnit MakeRequest(DataType _type, std::string_view _resource);
+    TransmissionUnit MakeRespond(DataType _type, std::shared_ptr<char> _buffer, size_t _size);
+    TransmissionUnit MakeError(DataType _type, std::string_view _message);
+
+    const Header &TransmissionUnit::GetHeader() const {
+        return header_;
+    }
+
+    Header &TransmissionUnit::GetHeader() {
+        return header_;
+    }
+
+    const std::shared_ptr<char> TransmissionUnit::GetData() const {
+        return data_;
+    }
+
+    std::shared_ptr<char> TransmissionUnit::GetData() {
+        return data_;
+    }
+
+    void TransmissionUnit::SetHeader(Header _header) {
+        header_ = _header;
+    }
 } // namespace cloud_storage::network
 
 #endif // CLOUD_STORAGE_NETWORK_PROTOCOL_HPP_

@@ -1,11 +1,11 @@
-#ifndef CLOUD_STORAGE_UTILITY_HELP_TOOLS_HPP_
-#define CLOUD_STORAGE_UTILITY_HELP_TOOLS_HPP_
+#ifndef CLOUD_STORAGE_SERVICE_HELP_TOOLS_HPP_
+#define CLOUD_STORAGE_SERVICE_HELP_TOOLS_HPP_
 
 #include <ws2tcpip.h>
 
 #include <type_traits>
 
-namespace cloud_storage::utility {
+namespace cloud_storage::service {
     using uint16_t = unsigned short;
     using uint32_t = unsigned int;
     using uint64_t = unsigned long long;
@@ -14,8 +14,8 @@ namespace cloud_storage::utility {
 
     uint64_t ntohll(uint64_t value);
 
-    template<typename T, typename... Args>
-    void ToHostRepresentation(T &arg, Args &...args) {
+    template<typename T>
+    std::decay_t<T> ToHostRepresentation(T &&arg) {
         using ArgType = std::remove_reference_t<T>;
 
         constexpr size_t size = sizeof(ArgType);
@@ -25,22 +25,18 @@ namespace cloud_storage::utility {
             "Unconvertable type!");
 
         if constexpr (size == sizeof(uint16_t)) {
-            arg = static_cast<ArgType>(ntohs(static_cast<uint16_t>(arg)));
+            return static_cast<ArgType>(ntohs(static_cast<uint16_t>(arg)));
         }
         else if constexpr (size == sizeof(uint32_t)) {
-            arg = static_cast<ArgType>(ntohl(static_cast<uint32_t>(arg)));
+            return static_cast<ArgType>(ntohl(static_cast<uint32_t>(arg)));
         }
         else if constexpr (size == sizeof(uint64_t)) {
-            arg = static_cast<ArgType>(ntohll(static_cast<uint64_t>(arg)));
-        }
-
-        if constexpr (sizeof...(args) != 0) {
-            ToHostRepresentation(args...);
+            return static_cast<ArgType>(ntohll(static_cast<uint64_t>(arg)));
         }
     }
 
-    template<typename T, typename... Args>
-    void ToNetworkRepresentation(T &arg, Args &...args) {
+    template<typename T>
+    std::decay_t<T> ToNetworkRepresentation(T &&arg) {
         using ArgType = std::remove_reference_t<T>;
 
         constexpr size_t size = sizeof(ArgType);
@@ -50,19 +46,15 @@ namespace cloud_storage::utility {
             "Unconvertable type!");
 
         if constexpr (size == sizeof(uint16_t)) {
-            arg = static_cast<ArgType>(htons(static_cast<uint16_t>(arg)));
+            return static_cast<ArgType>(htons(static_cast<uint16_t>(arg)));
         }
         else if constexpr (size == sizeof(uint32_t)) {
-            arg = static_cast<ArgType>(htonl(static_cast<uint32_t>(arg)));
+            return static_cast<ArgType>(htonl(static_cast<uint32_t>(arg)));
         }
         else if constexpr (size == sizeof(uint64_t)) {
-            arg = static_cast<ArgType>(htonll(static_cast<uint64_t>(arg)));
-        }
-
-        if constexpr (sizeof...(args) != 0) {
-            ToNetworkRepresentation(args...);
+            return static_cast<ArgType>(htonll(static_cast<uint64_t>(arg)));
         }
     }
-} // namespace cloud_storage::utility
+} // namespace cloud_storage::service
 
-#endif // CLOUD_STORAGE_UTILITY_HELP_TOOLS_HPP_
+#endif // CLOUD_STORAGE_SERVICE_HELP_TOOLS_HPP_

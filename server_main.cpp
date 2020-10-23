@@ -23,16 +23,17 @@ DWORD WINAPI ClientHandler(void *__client) {
 
     do {
         TransmissionUnit unit = reader.Read();
-
+        
         cloud_storage::stored_data::Profile profile;
 
         profile.username = "sakuyamaxanadu";
         profile.max_storage = (1 << 10) * 1024;
         profile.used_storage = (1 << 10) * 512;
 
-        unit = profile.Serialize();
+        auto [ptr, size] = profile.Serialize();
 
-        unit.header.unit_type = UnitType::kRespond;
+        unit = cloud_storage::network::MakeRespond(DataType::kProfile,
+            ptr, size);
 
         writer.Write(unit);
 

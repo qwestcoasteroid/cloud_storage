@@ -10,7 +10,7 @@ static bool IsLittleEndianness() {
 
 static const bool kLittleEndianness = IsLittleEndianness();
 
-namespace cloud_storage::utility {
+namespace cloud_storage::service {
     uint64_t htonll(uint64_t value) {
         if (kLittleEndianness) {
             const uint32_t high_part = htonl(static_cast<uint32_t>(value >> 32));
@@ -34,5 +34,5 @@ namespace cloud_storage::utility {
             return value;
         }
     }
-}
+} // namespace cloud_storage::service
 
