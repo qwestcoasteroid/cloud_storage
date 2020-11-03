@@ -6,15 +6,15 @@
 namespace cloud_storage::network {
     class BasicNetworkStream {
     public:
-        inline explicit BasicNetworkStream(const Client &client) :
-            client_(&client)  {}
+        inline explicit BasicNetworkStream(const Client &_client) :
+            client_(&_client)  {}
 
         virtual ~BasicNetworkStream() = 0;
 
-        inline void Reset(const Client *new_client) {
-            client_ = new_client;
+        inline void Reset(const Client &_new_client) {
+            client_ = &_new_client;
         }
-
+        // Reset()
         inline const Client &ServedClient() const {
             return *client_;
         }

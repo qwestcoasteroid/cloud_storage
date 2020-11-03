@@ -22,7 +22,20 @@ DWORD WINAPI ClientHandler(void *__client) {
     NetworkWritingStream writer(client);
 
     do {
-        TransmissionUnit unit = reader.Read();
+        TransmissionUnit unit;
+
+        try {
+            unit = reader.Read();
+        }
+        catch (...) {
+            std::cout << "Client " << __client << " disconnected!\n";
+
+            client.Disconnect();
+
+            free(__client);
+
+            return 0;
+        }
         
         cloud_storage::stored_data::Profile profile;
 
@@ -42,6 +55,8 @@ DWORD WINAPI ClientHandler(void *__client) {
     } while (true);
 
     free(__client);
+
+    return 0;
 }
 
 int main() {

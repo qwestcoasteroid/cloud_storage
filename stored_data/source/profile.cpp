@@ -5,16 +5,16 @@
 #include "help_tools.hpp"
 
 namespace cloud_storage::stored_data {
-    Profile::Profile(const network::TransmissionUnit &unit) {
-        if (unit.GetHeader().data_type != network::DataType::kProfile) {
+    Profile::Profile(const network::TransmissionUnit &_unit) {
+        if (_unit.GetHeader().data_type != network::DataType::kProfile) {
             // throw
         }
 
-        Deserialize(unit.GetData());
+        Deserialize(_unit.GetData());
     }
 
-    std::pair<std::shared_ptr<char>, size_t> Profile::Serialize() const {
-        std::shared_ptr<char> result;
+    std::pair<std::shared_ptr<char[]>, size_t> Profile::Serialize() const {
+        std::shared_ptr<char[]> result;
 
         size_t data_size = 0;
 
@@ -37,12 +37,12 @@ namespace cloud_storage::stored_data {
         return { result, data_size };
     }
 
-    Profile &Profile::Deserialize(const std::shared_ptr<char> buffer) {
-        if (buffer == nullptr) {
+    Profile &Profile::Deserialize(const std::shared_ptr<char[]> &_buffer) {
+        if (_buffer == nullptr) {
             return *this;
         }
 
-        const char *buffer_ptr = buffer.get();
+        const char *buffer_ptr = _buffer.get();
 
         username = std::string(buffer_ptr);
         buffer_ptr += username.size() + 1;

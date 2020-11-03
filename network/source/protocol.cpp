@@ -3,25 +3,27 @@
 #include <cstring>
 
 namespace cloud_storage::network {
-    TransmissionUnit::TransmissionUnit(TransmissionUnit &&unit) noexcept :
-        header_(unit.header_), data_(std::move(unit.data_)) {}
+    TransmissionUnit::TransmissionUnit(TransmissionUnit &&_unit) noexcept :
+        header_(_unit.header_), data_(std::move(_unit.data_)) {}
 
     TransmissionUnit &TransmissionUnit::operator=
-        (TransmissionUnit &&unit) noexcept {
-        
-        if (&unit == this) {
+        (TransmissionUnit &&_unit) noexcept {
+
+        if (&_unit == this) {
             return *this;
         }
 
-        header_ = unit.header_;
-        data_ = std::move(unit.data_);
+        header_ = _unit.header_;
+        data_ = std::move(_unit.data_);
         
         return *this;
     }
 
-    void TransmissionUnit::SetData(const std::shared_ptr<char> _buffer, size_t _size) {
+    void TransmissionUnit::SetData(const std::shared_ptr<char[]> &_buffer,
+        size_t _size) {
+            
         if (_size == 0) {
-            data_ = nullptr;
+            data_.reset();
         }
         else if (_buffer == nullptr) {
             data_.reset(new char[_size]);
@@ -52,7 +54,9 @@ namespace cloud_storage::network {
         return  result;
     }
 
-    TransmissionUnit MakeRespond(DataType _type, std::shared_ptr<char> _buffer, size_t _size) {
+    TransmissionUnit MakeRespond(DataType _type,
+        const std::shared_ptr<char[]> &_buffer, size_t _size) {
+
         TransmissionUnit result;
 
         Header header;
@@ -74,5 +78,4 @@ namespace cloud_storage::network {
 
         return result;
     }
-
 } // namespace cloud_storage::network

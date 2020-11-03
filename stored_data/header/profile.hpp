@@ -12,10 +12,10 @@ namespace cloud_storage::stored_data {
     class Profile : public service::Serializable {
     public:
         inline Profile() noexcept {}
-        Profile(const network::TransmissionUnit &unit);
+        Profile(const network::TransmissionUnit &_unit);
 
-        std::pair<std::shared_ptr<char>, size_t> Serialize() const override;
-        Profile &Deserialize(const std::shared_ptr<char> _buffer) override;
+        std::pair<std::shared_ptr<char[]>, size_t> Serialize() const override;
+        Profile &Deserialize(const std::shared_ptr<char[]> &_buffer) override;
 
         std::string username;
         uint64_t max_storage{};

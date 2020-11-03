@@ -1,5 +1,5 @@
 Continue creating 'stored_data' classes
 Add SSL code
 Create exceptions
-Add shutting down code for client
++-Add shutting down code for client
 Create memory allocator for multithreading

@@ -5,17 +5,15 @@
 #endif // DEBUG_OUTPUT
 
 namespace cloud_storage::network {
-    Client::Client() {}
-
-    Client::Client(std::string_view ip_address, std::string_view port) {
+    Client::Client(std::string_view _ip_address, std::string_view _port) {
         addrinfo hints;
         ZeroMemory(&hints, sizeof(hints));
 
         hints.ai_socktype = SOCK_STREAM;
 
-        addrinfo *peer_address;
+        addrinfo *peer_address = NULL;
 
-        if (getaddrinfo(ip_address.data(), port.data(), &hints, &peer_address)) {
+        if (getaddrinfo(_ip_address.data(), _port.data(), &hints, &peer_address)) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling getaddrinfo() ("
                 << WSAGetLastError() << ")\n";
@@ -43,22 +41,22 @@ namespace cloud_storage::network {
         freeaddrinfo(peer_address);
     }
 
-    Client::Client(Client &&client) noexcept {
-        CopyMemory(&socket_info_, &client.socket_info_,
+    Client::Client(Client &&_client) noexcept {
+        CopyMemory(&socket_info_, &_client.socket_info_,
             sizeof(socket_info_));
 
-        client.socket_info_.socket = INVALID_SOCKET;
+        _client.socket_info_.socket = INVALID_SOCKET;
     }
 
-    Client& Client::operator=(Client &&client) noexcept {
-        if (this == &client) {
+    Client& Client::operator=(Client &&_client) noexcept {
+        if (this == &_client) {
             return *this;
         }
 
-        CopyMemory(&socket_info_, &client.socket_info_,
+        CopyMemory(&socket_info_, &_client.socket_info_,
             sizeof(socket_info_));
 
-        client.socket_info_.socket = INVALID_SOCKET;
+        _client.socket_info_.socket = INVALID_SOCKET;
 
         return *this;
     }
@@ -67,9 +65,11 @@ namespace cloud_storage::network {
         if (socket_info_.socket != INVALID_SOCKET) {
             closesocket(socket_info_.socket);
         }
+
+        socket_info_.socket = INVALID_SOCKET;
     }
 
-    bool Client::Connect() const {
+    void Client::Connect() const {
         if (connect(socket_info_.socket,
             reinterpret_cast<const sockaddr *>(&socket_info_.address),
             socket_info_.address_length)) {
@@ -78,9 +78,16 @@ namespace cloud_storage::network {
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
             // throw
-            return false;
         }
+    }
 
-        return true;
+    void Client::Disconnect() const {
+        if (shutdown(socket_info_.socket, SD_SEND)) {
+#ifdef DEBUG_OUTPUT
+            std::cerr << "Error calling shutdown() ("
+                << WSAGetLastError() << ")\n";
+#endif // DEBUG_OUTPUT
+            // throw
+        }
     }
 }; // namespace cloud_storage::network

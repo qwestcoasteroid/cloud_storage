@@ -10,12 +10,10 @@
 #include "serializable.hpp"
 
 namespace cloud_storage::network {
-    extern void PerformStreamReading(const SocketInfo &, TransmissionUnit &);
-
     class NetworkReadingStream : public BasicNetworkStream {
     public:
-        inline NetworkReadingStream(const Client &client) noexcept :
-            BasicNetworkStream(client) {}
+        inline NetworkReadingStream(const Client &_client) noexcept :
+            BasicNetworkStream(_client) {}
 
         TransmissionUnit Read();
     };

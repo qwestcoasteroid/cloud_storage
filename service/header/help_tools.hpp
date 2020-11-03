@@ -15,7 +15,7 @@ namespace cloud_storage::service {
     uint64_t ntohll(uint64_t value);
 
     template<typename T>
-    std::decay_t<T> ToHostRepresentation(T &&arg) {
+    std::decay_t<T> ToHostRepresentation(T &&_arg) {
         using ArgType = std::remove_reference_t<T>;
 
         constexpr size_t size = sizeof(ArgType);
@@ -25,18 +25,18 @@ namespace cloud_storage::service {
             "Unconvertable type!");
 
         if constexpr (size == sizeof(uint16_t)) {
-            return static_cast<ArgType>(ntohs(static_cast<uint16_t>(arg)));
+            return static_cast<ArgType>(ntohs(static_cast<uint16_t>(_arg)));
         }
         else if constexpr (size == sizeof(uint32_t)) {
-            return static_cast<ArgType>(ntohl(static_cast<uint32_t>(arg)));
+            return static_cast<ArgType>(ntohl(static_cast<uint32_t>(_arg)));
         }
         else if constexpr (size == sizeof(uint64_t)) {
-            return static_cast<ArgType>(ntohll(static_cast<uint64_t>(arg)));
+            return static_cast<ArgType>(ntohll(static_cast<uint64_t>(_arg)));
         }
     }
 
     template<typename T>
-    std::decay_t<T> ToNetworkRepresentation(T &&arg) {
+    std::decay_t<T> ToNetworkRepresentation(T &&_arg) {
         using ArgType = std::remove_reference_t<T>;
 
         constexpr size_t size = sizeof(ArgType);
@@ -46,13 +46,13 @@ namespace cloud_storage::service {
             "Unconvertable type!");
 
         if constexpr (size == sizeof(uint16_t)) {
-            return static_cast<ArgType>(htons(static_cast<uint16_t>(arg)));
+            return static_cast<ArgType>(htons(static_cast<uint16_t>(_arg)));
         }
         else if constexpr (size == sizeof(uint32_t)) {
-            return static_cast<ArgType>(htonl(static_cast<uint32_t>(arg)));
+            return static_cast<ArgType>(htonl(static_cast<uint32_t>(_arg)));
         }
         else if constexpr (size == sizeof(uint64_t)) {
-            return static_cast<ArgType>(htonll(static_cast<uint64_t>(arg)));
+            return static_cast<ArgType>(htonll(static_cast<uint64_t>(_arg)));
         }
     }
 } // namespace cloud_storage::service

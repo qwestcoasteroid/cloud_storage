@@ -10,7 +10,7 @@ namespace cloud_storage::network {
     enum class DataType : uint16_t {
         kFile           = 0xFF00, kQuery          = 0xFE00,
         kAuthorization  = 0xFD00, kRegistration   = 0xFC00,
-        kProfile        = 0xFB00
+        kProfile        = 0xFB00, kMessage        = 0xFA00
     };
 
     enum class UnitType : uint16_t {
@@ -30,24 +30,25 @@ namespace cloud_storage::network {
         inline TransmissionUnit() noexcept {}
         inline virtual ~TransmissionUnit() {}
 
-        TransmissionUnit(TransmissionUnit &&unit) noexcept;
-        TransmissionUnit &operator=(TransmissionUnit &&unit) noexcept;
+        TransmissionUnit(TransmissionUnit &&_unit) noexcept;
+        TransmissionUnit &operator=(TransmissionUnit &&_unit) noexcept;
 
         inline const Header &GetHeader() const;
         inline Header &GetHeader();
-        inline const std::shared_ptr<char> GetData() const;
-        inline std::shared_ptr<char> GetData();
+        inline const std::shared_ptr<char[]> &GetData() const;
+        inline std::shared_ptr<char[]> &GetData();
 
         inline void SetHeader(Header _header);
-        void SetData(const std::shared_ptr<char> _buffer, size_t _size);
+        void SetData(const std::shared_ptr<char[]> &_buffer, size_t _size);
 
     private:
         Header header_;
-        std::shared_ptr<char> data_;
+        std::shared_ptr<char[]> data_;
     };
 
     TransmissionUnit MakeRequest(DataType _type, std::string_view _resource);
-    TransmissionUnit MakeRespond(DataType _type, std::shared_ptr<char> _buffer, size_t _size);
+    TransmissionUnit MakeRespond(DataType _type,
+        const std::shared_ptr<char[]> &_buffer, size_t _size);
     TransmissionUnit MakeError(DataType _type, std::string_view _message);
 
     const Header &TransmissionUnit::GetHeader() const {
@@ -58,11 +59,11 @@ namespace cloud_storage::network {
         return header_;
     }
 
-    const std::shared_ptr<char> TransmissionUnit::GetData() const {
+    const std::shared_ptr<char[]> &TransmissionUnit::GetData() const {
         return data_;
     }
 
-    std::shared_ptr<char> TransmissionUnit::GetData() {
+    std::shared_ptr<char[]> &TransmissionUnit::GetData() {
         return data_;
     }
 

@@ -9,7 +9,7 @@
 namespace cloud_storage::network {
     class Server : public NetworkObject {
     public:
-        explicit Server(std::string_view port);
+        explicit Server(std::string_view _port);
 
         ~Server();
 

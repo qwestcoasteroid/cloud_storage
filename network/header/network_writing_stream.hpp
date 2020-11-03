@@ -8,10 +8,10 @@
 namespace cloud_storage::network {
     class NetworkWritingStream : public BasicNetworkStream {
     public:
-        inline NetworkWritingStream(const Client &client) noexcept :
-            BasicNetworkStream(client) {} 
+        inline NetworkWritingStream(const Client &_client) noexcept :
+            BasicNetworkStream(_client) {} 
 
-        void Write(const TransmissionUnit &unit);
+        void Write(const TransmissionUnit &_unit);
     };
 } // namespace cloud_storage::network
 

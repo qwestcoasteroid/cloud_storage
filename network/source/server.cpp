@@ -7,7 +7,7 @@
 #define QUEUE_SIZE 16
 
 namespace cloud_storage::network {
-    Server::Server(std::string_view port) {
+    Server::Server(std::string_view _port) {
         addrinfo hints;
         ZeroMemory(&hints, sizeof(hints));
 
@@ -17,7 +17,7 @@ namespace cloud_storage::network {
 
         addrinfo *bind_address;
 
-        if (getaddrinfo(nullptr, port.data(), &hints, &bind_address)) {
+        if (getaddrinfo(nullptr, _port.data(), &hints, &bind_address)) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling getaddrinfo() ("
                 << WSAGetLastError() << ")\n";

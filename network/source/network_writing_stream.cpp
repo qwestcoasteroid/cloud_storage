@@ -8,36 +8,37 @@
 #include "help_tools.hpp"
 
 namespace cloud_storage::network {
-    static void SendDataStream(SOCKET socket,
-        const char *buffer, size_t size) {
+    static void SendDataStream(SOCKET _socket,
+        const char *_buffer, size_t _size) {
 
-        if (size == 0) {
+        if (_size == 0) {
             return;
         }
 
         int sent{ 0 };
 
         do {
-            int result = send(socket, buffer, size, 0);
+            int result = send(_socket, _buffer, _size, 0);
 
             if (result < 0) {
 #ifdef DEBUG_OUTPUT
                 std::cerr << "Error calling send() ("
                     << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
+                throw std::runtime_error("error");
                 // throw
             }
 
             sent += result;
 
-        } while (static_cast<size_t>(sent) != size);
+        } while (static_cast<size_t>(sent) != _size);
     }
 
-    void PerformStreamWriting(const SocketInfo &socket_info,
-        const TransmissionUnit &unit) {
+    void PerformStreamWriting(const SocketInfo &_socket_info,
+        const TransmissionUnit &_unit) {
 
-        Header header = unit.GetHeader();
-
+        Header header = _unit.GetHeader();
+        
         header.data_length =
             service::ToNetworkRepresentation(header.data_length);
         header.data_type =
@@ -45,18 +46,18 @@ namespace cloud_storage::network {
         header.unit_type =
             service::ToNetworkRepresentation(header.unit_type);
         
-        SendDataStream(socket_info.socket,
+        SendDataStream(_socket_info.socket,
             reinterpret_cast<const char *>(&header),
             sizeof(header));
         
-        SendDataStream(socket_info.socket, unit.GetData().get(),
-            unit.GetHeader().data_length);
+        SendDataStream(_socket_info.socket, _unit.GetData().get(),
+            _unit.GetHeader().data_length);
     }
 
-    void NetworkWritingStream::Write(const TransmissionUnit &unit) {
+    void NetworkWritingStream::Write(const TransmissionUnit &_unit) {
         switch (client_->GetSocketInfo().socket_type) {
         case SOCK_STREAM:
-            PerformStreamWriting(client_->GetSocketInfo(), unit);
+            PerformStreamWriting(client_->GetSocketInfo(), _unit);
             break;
         default:
 #ifdef DEBUG_OUTPUT
