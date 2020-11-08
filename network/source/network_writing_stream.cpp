@@ -43,8 +43,6 @@ namespace cloud_storage::network {
             service::ToNetworkRepresentation(header.data_length);
         header.data_type =
             service::ToNetworkRepresentation(header.data_type);
-        header.unit_type =
-            service::ToNetworkRepresentation(header.unit_type);
         
         SendDataStream(_socket_info.socket,
             reinterpret_cast<const char *>(&header),

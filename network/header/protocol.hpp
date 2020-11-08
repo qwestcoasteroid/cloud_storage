@@ -7,22 +7,26 @@
 // TODO: MakeError - send error code instead of message
 
 namespace cloud_storage::network {
-    enum class DataType : uint16_t {
-        kFile           = 0xFF00, kQuery          = 0xFE00,
-        kAuthorization  = 0xFD00, kRegistration   = 0xFC00,
-        kProfile        = 0xFB00, kMessage        = 0xFA00
+    enum class DataType : uint8_t {
+        kFile           = 0xFF, kQuery          = 0xFE,
+        kAuthorization  = 0xFD, kRegistration   = 0xFC,
+        kProfile        = 0xFB, kMessage        = 0xFA
     };
 
-    enum class UnitType : uint16_t {
-        kRequest    = 0x80,
-        kRespond    = 0x40,
-        kError      = 0x20
+    enum class ErrorCode : uint8_t {
+        kSuccess = 0x00
     };
 
     struct Header {
         uint32_t data_length{};
         DataType data_type;
-        UnitType unit_type;
+        ErrorCode error_code;
+        uint32_t fragment_size{};
+        uint8_t respond : 1;
+        uint8_t fragmentation : 1;
+        uint8_t error : 1;
+    private:
+        uint8_t reserved : 5;
     };
 
     class TransmissionUnit {

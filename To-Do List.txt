@@ -1,5 +1,12 @@
-Continue creating 'stored_data' classes
-Add SSL code
-Create exceptions
-+-Add shutting down code for client
-Create memory allocator for multithreading
+Primary:
+    -Create 'filesystem' file class
+        -File mapping
+        -Fragmentation
+        -Read/Write operations
+
+Secondary:
+    -Continue creating 'stored_data' classes
+    -Add SSL code
+    -Create exceptions
+    -Add shutting down code for client
+    -Create memory allocator for multithreading

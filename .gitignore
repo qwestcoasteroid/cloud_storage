@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+# Main source files
+/*.cpp

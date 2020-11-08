@@ -51,8 +51,6 @@ namespace cloud_storage::network {
             service::ToHostRepresentation(_unit.GetHeader().data_length);
         _unit.GetHeader().data_type =
             service::ToHostRepresentation(_unit.GetHeader().data_type);
-        _unit.GetHeader().unit_type =
-            service::ToHostRepresentation(_unit.GetHeader().unit_type);
 
         _unit.SetData(nullptr, _unit.GetHeader().data_length);
 

@@ -4,19 +4,20 @@
 
 #include "server.hpp"
 #include "client.hpp"
-#include "profile.hpp"
+#include "file.hpp"
 #include "network_writing_stream.hpp"
 #include "network_reading_stream.hpp"
 
-DWORD WINAPI ClientHandler(void *__client) {
+#define FRAGMENT_SIZE (64 * (1 << 10))
+
+DWORD WINAPI ClientHandler(void *_client) {
     using cloud_storage::network::Client;
     using cloud_storage::network::TransmissionUnit;
     using cloud_storage::network::NetworkReadingStream;
     using cloud_storage::network::NetworkWritingStream;
-    using cloud_storage::network::UnitType;
     using cloud_storage::network::DataType;
 
-    Client &client = *reinterpret_cast<Client *>(__client);
+    Client &client = *reinterpret_cast<Client *>(_client);
 
     NetworkReadingStream reader(client);
     NetworkWritingStream writer(client);
@@ -28,33 +29,54 @@ DWORD WINAPI ClientHandler(void *__client) {
             unit = reader.Read();
         }
         catch (...) {
-            std::cout << "Client " << __client << " disconnected!\n";
+            std::cout << "Client " << _client << " disconnected!\n";
 
             client.Disconnect();
 
-            free(__client);
+            free(_client);
 
             return 0;
         }
-        
-        cloud_storage::stored_data::Profile profile;
 
-        profile.username = "sakuyamaxanadu";
-        profile.max_storage = (1 << 10) * 1024;
-        profile.used_storage = (1 << 10) * 512;
+        if (unit.GetHeader().data_type == DataType::kFile && !unit.GetHeader().respond) {
+            std::string file_name(unit.GetData().get());
 
-        auto [ptr, size] = profile.Serialize();
+            HANDLE requested_file = CreateFile(file_name.c_str(),
+                GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-        unit = cloud_storage::network::MakeRespond(DataType::kProfile,
-            ptr, size);
+            DWORD file_size;
+            GetFileSize(requested_file, &file_size);
 
-        writer.Write(unit);
+            HANDLE file_map = CreateFileMapping(requested_file, NULL,
+                PAGE_READONLY, 0, 0, NULL);
+
+            LPVOID file_ptr = MapViewOfFile(file_map, FILE_MAP_READ, 0, 0, 0);
+
+            cloud_storage::stored_data::File file;
+
+            file.size = file_size;
+            file.name = file_name;
+            GetSystemTime(&file.creation_time);
+            file.editing_time = file.creation_time;
+
+            auto [ptr, size] = file.Serialize();
+
+            TransmissionUnit unit = cloud_storage::network::MakeRespond(DataType::kFile, ptr, size);
+
+            writer.Write(unit);
+
+            
+
+            UnmapViewOfFile(file_ptr);
+            CloseHandle(file_map);
+            CloseHandle(requested_file);
+        }
 
         std::cout << "Message sent! from " << GetCurrentThreadId() << " thread." << std::endl;
 
     } while (true);
 
-    free(__client);
+    free(_client);
 
     return 0;
 }

@@ -41,7 +41,8 @@ namespace cloud_storage::network {
         Header header;
 
         header.data_type = _type;
-        header.unit_type = UnitType::kRequest;
+        header.respond = 0;
+        header.error = 0;
 
         result.SetHeader(header);
 
@@ -62,7 +63,8 @@ namespace cloud_storage::network {
         Header header;
 
         header.data_type = _type;
-        header.unit_type = UnitType::kRespond;
+        header.respond = 1;
+        header.error = 0;
 
         result.SetHeader(header);
         
@@ -74,7 +76,8 @@ namespace cloud_storage::network {
     TransmissionUnit MakeError(DataType _type, std::string_view _message) {
         TransmissionUnit result = MakeRequest(_type, _message);
 
-        result.GetHeader().unit_type = UnitType::kError;
+        result.GetHeader().error = 1;
+        result.GetHeader().respond = 1;
 
         return result;
     }

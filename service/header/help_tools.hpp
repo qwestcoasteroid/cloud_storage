@@ -6,25 +6,29 @@
 #include <type_traits>
 
 namespace cloud_storage::service {
+    using uint8_t = unsigned char;
     using uint16_t = unsigned short;
     using uint32_t = unsigned int;
     using uint64_t = unsigned long long;
 
-    uint64_t htonll(uint64_t value);
+    uint64_t htonll(uint64_t _value);
 
-    uint64_t ntohll(uint64_t value);
+    uint64_t ntohll(uint64_t _value);
 
     template<typename T>
     std::decay_t<T> ToHostRepresentation(T &&_arg) {
-        using ArgType = std::remove_reference_t<T>;
+        using ArgType = std::decay_t<T>;
 
         constexpr size_t size = sizeof(ArgType);
 
-        static_assert(size == sizeof(uint16_t) || size ==
-            sizeof(uint32_t) || size == sizeof(uint64_t),
+        static_assert(sizeof(uint8_t) || size == sizeof(uint16_t) ||
+            size == sizeof(uint32_t) || size == sizeof(uint64_t),
             "Unconvertable type!");
 
-        if constexpr (size == sizeof(uint16_t)) {
+        if constexpr (size == sizeof(uint8_t)) {
+            return static_cast<ArgType>(_arg);
+        }
+        else if constexpr (size == sizeof(uint16_t)) {
             return static_cast<ArgType>(ntohs(static_cast<uint16_t>(_arg)));
         }
         else if constexpr (size == sizeof(uint32_t)) {
@@ -37,15 +41,18 @@ namespace cloud_storage::service {
 
     template<typename T>
     std::decay_t<T> ToNetworkRepresentation(T &&_arg) {
-        using ArgType = std::remove_reference_t<T>;
+        using ArgType = std::decay_t<T>;
 
         constexpr size_t size = sizeof(ArgType);
 
-        static_assert(size == sizeof(uint16_t) || size ==
-            sizeof(uint32_t) || size == sizeof(uint64_t),
+        static_assert(sizeof(uint8_t) || size == sizeof(uint16_t) ||
+            size == sizeof(uint32_t) || size == sizeof(uint64_t),
             "Unconvertable type!");
 
-        if constexpr (size == sizeof(uint16_t)) {
+        if constexpr (size == sizeof(uint8_t)) {
+            return static_cast<ArgType>(_arg);
+        }
+        else if constexpr (size == sizeof(uint16_t)) {
             return static_cast<ArgType>(htons(static_cast<uint16_t>(_arg)));
         }
         else if constexpr (size == sizeof(uint32_t)) {
