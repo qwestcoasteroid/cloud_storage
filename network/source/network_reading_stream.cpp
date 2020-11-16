@@ -41,29 +41,27 @@ namespace cloud_storage::network {
     }
 
     void PerformStreamReading(const SocketInfo &_socket_info,
-        TransmissionUnit &_unit) {
+        Packet &_packet) {
 
         ReceiveDataStream(_socket_info.socket,
-            reinterpret_cast<char *>(&_unit.GetHeader()),
-            sizeof(_unit.GetHeader()));
+            reinterpret_cast<char *>(&_packet.GetHeader()),
+            sizeof(_packet.GetHeader()));
 
-        _unit.GetHeader().data_length =
-            service::ToHostRepresentation(_unit.GetHeader().data_length);
-        _unit.GetHeader().data_type =
-            service::ToHostRepresentation(_unit.GetHeader().data_type);
+        _packet.GetHeader().data_length =
+            service::ToHostRepresentation(_packet.GetHeader().data_length);
 
-        _unit.SetData(nullptr, _unit.GetHeader().data_length);
+        _packet.SetData(nullptr, _packet.GetHeader().data_length);
 
-        ReceiveDataStream(_socket_info.socket, _unit.GetData().get(),
-            _unit.GetHeader().data_length);
+        ReceiveDataStream(_socket_info.socket, _packet.GetData().get(),
+            _packet.GetHeader().data_length);
     }
 
-    TransmissionUnit NetworkReadingStream::Read() {
-        TransmissionUnit result;
+    Packet NetworkReadingStream::Read() {
+        Packet result;
 
-        switch (client_->GetSocketInfo().socket_type) {
+        switch (connection_->GetSocketInfo().socket_type) {
         case SOCK_STREAM:
-            PerformStreamReading(client_->GetSocketInfo(), result);
+            PerformStreamReading(connection_->GetSocketInfo(), result);
             break;
         default:
 #ifdef DEBUG_OUTPUT

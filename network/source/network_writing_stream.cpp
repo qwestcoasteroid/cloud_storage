@@ -35,27 +35,24 @@ namespace cloud_storage::network {
     }
 
     void PerformStreamWriting(const SocketInfo &_socket_info,
-        const TransmissionUnit &_unit) {
+        const Packet &_packet) {
 
-        Header header = _unit.GetHeader();
+        Header header = _packet.GetHeader();
         
         header.data_length =
             service::ToNetworkRepresentation(header.data_length);
-        header.data_type =
-            service::ToNetworkRepresentation(header.data_type);
         
         SendDataStream(_socket_info.socket,
-            reinterpret_cast<const char *>(&header),
-            sizeof(header));
+            reinterpret_cast<const char *>(&header), sizeof(header));
         
-        SendDataStream(_socket_info.socket, _unit.GetData().get(),
-            _unit.GetHeader().data_length);
+        SendDataStream(_socket_info.socket, _packet.GetData().get(),
+            _packet.GetHeader().data_length);
     }
 
-    void NetworkWritingStream::Write(const TransmissionUnit &_unit) {
-        switch (client_->GetSocketInfo().socket_type) {
+    void NetworkWritingStream::Write(const Packet &_packet) {
+        switch (connection_->GetSocketInfo().socket_type) {
         case SOCK_STREAM:
-            PerformStreamWriting(client_->GetSocketInfo(), _unit);
+            PerformStreamWriting(connection_->GetSocketInfo(), _packet);
             break;
         default:
 #ifdef DEBUG_OUTPUT

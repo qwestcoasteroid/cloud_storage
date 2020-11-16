@@ -9,14 +9,14 @@
 #include "protocol.hpp"
 
 namespace cloud_storage::stored_data {
-    class File : public service::Serializable {
+    class FileInfo : public service::Serializable {
         using uint64_t = unsigned long long;
     public:
-        inline File() noexcept {}
-        File(const network::TransmissionUnit &_unit);
+        inline FileInfo() noexcept {}
+        FileInfo(const network::Packet &_packet);
 
         std::pair<std::shared_ptr<char[]>, size_t> Serialize() const override;
-        File &Deserialize(const std::shared_ptr<char[]> &_buffer) override;
+        FileInfo &Deserialize(const std::shared_ptr<char[]> &_buffer) override;
 
         std::string name;
         uint64_t size{};

@@ -10,12 +10,12 @@
 #include "serializable.hpp"
 
 namespace cloud_storage::network {
-    class NetworkReadingStream : public BasicNetworkStream {
+    class NetworkReadingStream : public virtual BasicNetworkStream {
     public:
-        inline NetworkReadingStream(const Client &_client) noexcept :
-            BasicNetworkStream(_client) {}
+        inline NetworkReadingStream(const Connection &_connection) noexcept :
+            BasicNetworkStream(_connection) {}
 
-        TransmissionUnit Read();
+        Packet Read();
     };
 } // namespace cloud_storage::network
 

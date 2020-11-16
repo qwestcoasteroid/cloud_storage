@@ -20,29 +20,28 @@ namespace cloud_storage::network {
     struct Header {
         uint32_t data_length{};
         DataType data_type;
-        ErrorCode error_code;
-        uint32_t fragment_size{};
+        ErrorCode error_code{ ErrorCode::kSuccess };
         uint8_t respond : 1;
-        uint8_t fragmentation : 1;
+        uint8_t fragment : 1;
         uint8_t error : 1;
     private:
-        uint8_t reserved : 5;
+        uint8_t reserved_ : 5;
     };
 
-    class TransmissionUnit {
+    class Packet {
     public:
-        inline TransmissionUnit() noexcept {}
-        inline virtual ~TransmissionUnit() {}
+        inline Packet() noexcept {}
+        inline virtual ~Packet() {}
 
-        TransmissionUnit(TransmissionUnit &&_unit) noexcept;
-        TransmissionUnit &operator=(TransmissionUnit &&_unit) noexcept;
+        Packet(Packet &&_packet) noexcept;
+        Packet &operator=(Packet &&_packet) noexcept;
 
         inline const Header &GetHeader() const;
         inline Header &GetHeader();
         inline const std::shared_ptr<char[]> &GetData() const;
         inline std::shared_ptr<char[]> &GetData();
 
-        inline void SetHeader(Header _header);
+        inline void SetHeader(const Header &_header);
         void SetData(const std::shared_ptr<char[]> &_buffer, size_t _size);
 
     private:
@@ -50,28 +49,28 @@ namespace cloud_storage::network {
         std::shared_ptr<char[]> data_;
     };
 
-    TransmissionUnit MakeRequest(DataType _type, std::string_view _resource);
-    TransmissionUnit MakeRespond(DataType _type,
+    Packet MakeRequest(DataType _type, std::string_view _resource);
+    Packet MakeRespond(DataType _type,
         const std::shared_ptr<char[]> &_buffer, size_t _size);
-    TransmissionUnit MakeError(DataType _type, std::string_view _message);
+    Packet MakeError(DataType _type, std::string_view _message);
 
-    const Header &TransmissionUnit::GetHeader() const {
+    const Header &Packet::GetHeader() const {
         return header_;
     }
 
-    Header &TransmissionUnit::GetHeader() {
+    Header &Packet::GetHeader() {
         return header_;
     }
 
-    const std::shared_ptr<char[]> &TransmissionUnit::GetData() const {
+    const std::shared_ptr<char[]> &Packet::GetData() const {
         return data_;
     }
 
-    std::shared_ptr<char[]> &TransmissionUnit::GetData() {
+    std::shared_ptr<char[]> &Packet::GetData() {
         return data_;
     }
 
-    void TransmissionUnit::SetHeader(Header _header) {
+    void Packet::SetHeader(const Header &_header) {
         header_ = _header;
     }
 } // namespace cloud_storage::network

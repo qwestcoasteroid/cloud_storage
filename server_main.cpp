@@ -2,36 +2,36 @@
 
 #include <iostream>
 
-#include "server.hpp"
-#include "client.hpp"
-#include "file.hpp"
+#include "listener.hpp"
+#include "connection.hpp"
+#include "file_info.hpp"
 #include "network_writing_stream.hpp"
 #include "network_reading_stream.hpp"
 
 #define FRAGMENT_SIZE (64 * (1 << 10))
 
 DWORD WINAPI ClientHandler(void *_client) {
-    using cloud_storage::network::Client;
-    using cloud_storage::network::TransmissionUnit;
+    using cloud_storage::network::Connection;
+    using cloud_storage::network::Packet;
     using cloud_storage::network::NetworkReadingStream;
     using cloud_storage::network::NetworkWritingStream;
     using cloud_storage::network::DataType;
 
-    Client &client = *reinterpret_cast<Client *>(_client);
+    Connection &connection = *reinterpret_cast<Connection *>(_client);
 
-    NetworkReadingStream reader(client);
-    NetworkWritingStream writer(client);
+    NetworkReadingStream reader(connection);
+    NetworkWritingStream writer(connection);
 
     do {
-        TransmissionUnit unit;
+        Packet unit;
 
         try {
             unit = reader.Read();
         }
         catch (...) {
-            std::cout << "Client " << _client << " disconnected!\n";
+            std::cout << "Connection " << _client << " disconnected!\n";
 
-            client.Disconnect();
+            connection.Disconnect();
 
             free(_client);
 
@@ -52,7 +52,7 @@ DWORD WINAPI ClientHandler(void *_client) {
 
             LPVOID file_ptr = MapViewOfFile(file_map, FILE_MAP_READ, 0, 0, 0);
 
-            cloud_storage::stored_data::File file;
+            cloud_storage::stored_data::FileInfo file;
 
             file.size = file_size;
             file.name = file_name;
@@ -61,7 +61,7 @@ DWORD WINAPI ClientHandler(void *_client) {
 
             auto [ptr, size] = file.Serialize();
 
-            TransmissionUnit unit = cloud_storage::network::MakeRespond(DataType::kFile, ptr, size);
+            Packet unit = cloud_storage::network::MakeRespond(DataType::kFile, ptr, size);
 
             writer.Write(unit);
 
@@ -82,24 +82,24 @@ DWORD WINAPI ClientHandler(void *_client) {
 }
 
 int main() {
-    cloud_storage::network::Server server("43000");
+    cloud_storage::network::Listener listener("43000");
 
     do {
-        cloud_storage::network::Client *client =
-            (cloud_storage::network::Client *)malloc(
-            sizeof(cloud_storage::network::Client));
+        cloud_storage::network::Connection *connection =
+            (cloud_storage::network::Connection *)malloc(
+            sizeof(cloud_storage::network::Connection));
 
-        *client = server.Accept();
+        *connection = listener.Accept();
 
         char ipaddr[100];
 
-        getnameinfo(reinterpret_cast<const sockaddr *>(&client->GetSocketInfo().address),
-            client->GetSocketInfo().address_length, ipaddr,
+        getnameinfo(reinterpret_cast<const sockaddr *>(&connection->GetSocketInfo().address),
+            connection->GetSocketInfo().address_length, ipaddr,
             sizeof(ipaddr), nullptr, 0, NI_NUMERICHOST);
 
-        std::cout << "Client [" << ipaddr << "] connected!\n\n";
+        std::cout << "Connection [" << ipaddr << "] connected!\n\n";
 
-        QueueUserWorkItem(ClientHandler, client, WT_EXECUTEDEFAULT);
+        QueueUserWorkItem(ClientHandler, connection, WT_EXECUTEDEFAULT);
 
     } while (true);
 

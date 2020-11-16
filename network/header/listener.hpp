@@ -4,16 +4,16 @@
 #include <string_view>
 
 #include "network_object.hpp"
-#include "client.hpp"
+#include "connection.hpp"
 
 namespace cloud_storage::network {
-    class Server : public NetworkObject {
+    class Listener : public NetworkObject {
     public:
-        explicit Server(std::string_view _port);
+        explicit Listener(std::string_view _port);
 
-        ~Server();
+        ~Listener();
 
-        Client Accept() const;
+        Connection Accept() const;
     };
 } // namespace cloud_storage::network
 

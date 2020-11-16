@@ -1,13 +1,15 @@
-#include "client.hpp"
+#include "connection.hpp"
+
+#include <cstring>
 
 #ifdef DEBUG_OUTPUT
 #include <iostream>
 #endif // DEBUG_OUTPUT
 
 namespace cloud_storage::network {
-    Client::Client(std::string_view _ip_address, std::string_view _port) {
+    Connection::Connection(std::string_view _ip_address, std::string_view _port) {
         addrinfo hints;
-        ZeroMemory(&hints, sizeof(hints));
+        std::memset(&hints, 0, sizeof(hints));
 
         hints.ai_socktype = SOCK_STREAM;
 
@@ -32,7 +34,7 @@ namespace cloud_storage::network {
             // throw
         }
 
-        CopyMemory(&socket_info_.address, peer_address->ai_addr,
+        std::memcpy(&socket_info_.address, peer_address->ai_addr,
             peer_address->ai_addrlen);
 
         socket_info_.address_length = peer_address->ai_addrlen;
@@ -41,19 +43,19 @@ namespace cloud_storage::network {
         freeaddrinfo(peer_address);
     }
 
-    Client::Client(Client &&_client) noexcept {
-        CopyMemory(&socket_info_, &_client.socket_info_,
+    Connection::Connection(Connection &&_client) noexcept {
+        std::memcpy(&socket_info_, &_client.socket_info_,
             sizeof(socket_info_));
 
         _client.socket_info_.socket = INVALID_SOCKET;
     }
 
-    Client& Client::operator=(Client &&_client) noexcept {
+    Connection& Connection::operator=(Connection &&_client) noexcept {
         if (this == &_client) {
             return *this;
         }
 
-        CopyMemory(&socket_info_, &_client.socket_info_,
+        std::memcpy(&socket_info_, &_client.socket_info_,
             sizeof(socket_info_));
 
         _client.socket_info_.socket = INVALID_SOCKET;
@@ -61,7 +63,7 @@ namespace cloud_storage::network {
         return *this;
     }
 
-    Client::~Client() {
+    Connection::~Connection() {
         if (socket_info_.socket != INVALID_SOCKET) {
             closesocket(socket_info_.socket);
         }
@@ -69,7 +71,7 @@ namespace cloud_storage::network {
         socket_info_.socket = INVALID_SOCKET;
     }
 
-    void Client::Connect() const {
+    void Connection::Connect() const {
         if (connect(socket_info_.socket,
             reinterpret_cast<const sockaddr *>(&socket_info_.address),
             socket_info_.address_length)) {
@@ -81,7 +83,7 @@ namespace cloud_storage::network {
         }
     }
 
-    void Client::Disconnect() const {
+    void Connection::Disconnect() const {
         if (shutdown(socket_info_.socket, SD_SEND)) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling shutdown() ("

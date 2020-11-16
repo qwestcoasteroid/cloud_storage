@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "client.hpp"
-#include "file.hpp"
+#include "connection.hpp"
+#include "file_info.hpp"
 #include "network_reading_stream.hpp"
 #include "network_writing_stream.hpp"
 #include "help_tools.hpp"
@@ -12,12 +12,12 @@ int main() {
     std::cout << "Enter file name: ";
     std::cin >> file_name;
     
-    cloud_storage::network::Client client("127.0.0.1", "43000");
+    cloud_storage::network::Connection connection("127.0.0.1", "43000");
 
-    client.Connect();
+    connection.Connect();
 
-    cloud_storage::network::NetworkReadingStream reader(client);
-    cloud_storage::network::NetworkWritingStream writer(client);
+    cloud_storage::network::NetworkReadingStream reader(connection);
+    cloud_storage::network::NetworkWritingStream writer(connection);
 
     size_t packets_received = 0;
 
@@ -34,10 +34,10 @@ int main() {
             continue;
         }
 
-        cloud_storage::stored_data::File file(unit);
+        cloud_storage::stored_data::FileInfo file(unit);
 
         if (unit.GetHeader().data_type == cloud_storage::network::DataType::kFile) {
-            std::cout << "File received!" << std::endl;
+            std::cout << "FileInfo received!" << std::endl;
             ++packets_received;
         }
 
@@ -50,13 +50,13 @@ int main() {
 
     } while (packets_received != 12);
 
-    client.Disconnect();
+    connection.Disconnect();
 
     try {
         reader.Read();
     }
     catch (...) {
-        std::cout << "Disconnected from " << &client << std::endl;
+        std::cout << "Disconnected from " << &connection << std::endl;
     }
 
     return 0;

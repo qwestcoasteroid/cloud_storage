@@ -8,7 +8,7 @@ namespace cloud_storage::stored_data {
     class Message : public service::Serializable {
     public:
         inline Message() noexcept {}
-        Message(const network::TransmissionUnit &_unit);
+        Message(const network::Packet &_packet);
 
         std::pair<std::shared_ptr<char[]>, size_t> Serialize() const override;
         Message &Deserialize(const std::shared_ptr<char[]> &_buffer) override;

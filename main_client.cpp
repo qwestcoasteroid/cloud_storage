@@ -4,8 +4,8 @@
 #include <vector>
 #include <algorithm>
 
-#include "client.hpp"
-#include "server.hpp"
+#include "connection.hpp"
+#include "listener.hpp"
 #include "network_reading_stream.hpp"
 #include "network_writing_stream.hpp"
 #include "message.hpp"
@@ -13,19 +13,19 @@
 DWORD WINAPI HandleMessages(void *_arg) {
     using namespace cloud_storage;
 
-    network::Client &client = *reinterpret_cast<network::Client *>(_arg);
+    network::Connection &connection = *reinterpret_cast<network::Connection *>(_arg);
 
-    network::NetworkReadingStream reader(client);
+    network::NetworkReadingStream reader(connection);
 
-    network::TransmissionUnit unit;
+    network::Packet unit;
 
     while (true) {
         try {
             unit = reader.Read();
         }
         catch (...) {
-            client.Disconnect();
-            std::cout << "Disconnected from server!\n";
+            connection.Disconnect();
+            std::cout << "Disconnected from listener!\n";
             exit(0);
         }
 
@@ -49,19 +49,19 @@ int main() {
     std::cout << "Your nickname: ";
     std::cin >> nickname;
 
-    network::Client client(ip, port);
+    network::Connection connection(ip, port);
 
-    client.Connect();
+    connection.Connect();
 
-    QueueUserWorkItem(HandleMessages, &client, 0);
+    QueueUserWorkItem(HandleMessages, &connection, 0);
 
-    network::NetworkWritingStream writer(client);
+    network::NetworkWritingStream writer(connection);
 
     stored_data::Message message;
 
     message.sender = nickname;
 
-    network::TransmissionUnit unit;
+    network::Packet unit;
 
     while (true) {
         std::cin >> std::ws;    
@@ -79,15 +79,15 @@ int main() {
         writer.Write(unit);
     }
 
-    client.Disconnect();
+    connection.Disconnect();
 
     try {
-        network::NetworkReadingStream reader(client);
+        network::NetworkReadingStream reader(connection);
 
         reader.Read();
     }
     catch (...) {
-        std::cout << "Disconnected from server!\n";
+        std::cout << "Disconnected from listener!\n";
     }
 
     return 0;

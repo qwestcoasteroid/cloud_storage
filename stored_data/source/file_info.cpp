@@ -1,19 +1,19 @@
-#include "file.hpp"
+#include "file_info.hpp"
 
 #include <cstring>
 
 #include "help_tools.hpp"
 
 namespace cloud_storage::stored_data {
-    File::File(const network::TransmissionUnit &_unit) {
-        if (_unit.GetHeader().data_type != network::DataType::kFile) {
+    FileInfo::FileInfo(const network::Packet &_packet) {
+        if (_packet.GetHeader().data_type != network::DataType::kFile) {
             // throw
         }
 
-        Deserialize(_unit.GetData());
+        Deserialize(_packet.GetData());
     }
 
-    std::pair<std::shared_ptr<char[]>, size_t> File::Serialize() const {
+    std::pair<std::shared_ptr<char[]>, size_t> FileInfo::Serialize() const {
         std::shared_ptr<char[]> result;
 
         size_t data_size = sizeof(size) + 2 * sizeof(ULARGE_INTEGER) + name.size() + 1;
@@ -48,7 +48,7 @@ namespace cloud_storage::stored_data {
         return { result, data_size };
     }
 
-    File &File::Deserialize(const std::shared_ptr<char[]> &_buffer) {
+    FileInfo &FileInfo::Deserialize(const std::shared_ptr<char[]> &_buffer) {
         if (_buffer == nullptr) {
             return *this;
         }

@@ -3,23 +3,23 @@
 #include <cstring>
 
 namespace cloud_storage::network {
-    TransmissionUnit::TransmissionUnit(TransmissionUnit &&_unit) noexcept :
-        header_(_unit.header_), data_(std::move(_unit.data_)) {}
+    Packet::Packet(Packet &&_packet) noexcept :
+        header_(_packet.header_), data_(std::move(_packet.data_)) {}
 
-    TransmissionUnit &TransmissionUnit::operator=
-        (TransmissionUnit &&_unit) noexcept {
+    Packet &Packet::operator=
+        (Packet &&_packet) noexcept {
 
-        if (&_unit == this) {
+        if (&_packet == this) {
             return *this;
         }
 
-        header_ = _unit.header_;
-        data_ = std::move(_unit.data_);
+        header_ = _packet.header_;
+        data_ = std::move(_packet.data_);
         
         return *this;
     }
 
-    void TransmissionUnit::SetData(const std::shared_ptr<char[]> &_buffer,
+    void Packet::SetData(const std::shared_ptr<char[]> &_buffer,
         size_t _size) {
             
         if (_size == 0) {
@@ -35,8 +35,8 @@ namespace cloud_storage::network {
         header_.data_length = _size;
     }
 
-    TransmissionUnit MakeRequest(DataType _type, std::string_view _resource) {
-        TransmissionUnit result;
+    Packet MakeRequest(DataType _type, std::string_view _resource) {
+        Packet result;
 
         Header header;
 
@@ -48,17 +48,18 @@ namespace cloud_storage::network {
 
         result.SetData(nullptr, _resource.size() + 1);
 
-        std::memcpy(result.GetData().get(), _resource.data(), _resource.size());
+        std::memcpy(result.GetData().get(), _resource.data(),
+            _resource.size());
 
         result.GetData().get()[_resource.size()] = '\0';
 
         return  result;
     }
 
-    TransmissionUnit MakeRespond(DataType _type,
+    Packet MakeRespond(DataType _type,
         const std::shared_ptr<char[]> &_buffer, size_t _size) {
 
-        TransmissionUnit result;
+        Packet result;
 
         Header header;
 
@@ -73,8 +74,8 @@ namespace cloud_storage::network {
         return result;
     }
 
-    TransmissionUnit MakeError(DataType _type, std::string_view _message) {
-        TransmissionUnit result = MakeRequest(_type, _message);
+    Packet MakeError(DataType _type, std::string_view _message) {
+        Packet result = MakeRequest(_type, _message);
 
         result.GetHeader().error = 1;
         result.GetHeader().respond = 1;

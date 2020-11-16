@@ -3,6 +3,8 @@ Primary:
         -File mapping
         -Fragmentation
         -Read/Write operations
+    -Change string serialization method
+    -Pass input buffer size to the 'Deserialize' method
 
 Secondary:
     -Continue creating 'stored_data' classes

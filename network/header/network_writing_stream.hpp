@@ -6,12 +6,12 @@
 #include "serializable.hpp"
 
 namespace cloud_storage::network {
-    class NetworkWritingStream : public BasicNetworkStream {
+    class NetworkWritingStream : public virtual BasicNetworkStream {
     public:
-        inline NetworkWritingStream(const Client &_client) noexcept :
-            BasicNetworkStream(_client) {} 
+        inline NetworkWritingStream(const Connection &_connection) noexcept :
+            BasicNetworkStream(_connection) {} 
 
-        void Write(const TransmissionUnit &_unit);
+        void Write(const Packet &_packet);
     };
 } // namespace cloud_storage::network
 

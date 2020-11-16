@@ -3,12 +3,12 @@
 #include <cstring>
 
 namespace cloud_storage::stored_data {
-    Message::Message(const network::TransmissionUnit &_unit) {
-        if (_unit.GetHeader().data_type != network::DataType::kMessage) {
+    Message::Message(const network::Packet &_packet) {
+        if (_packet.GetHeader().data_type != network::DataType::kMessage) {
             // throw
         }
 
-        Deserialize(_unit.GetData());
+        Deserialize(_packet.GetData());
     }
 
     std::pair<std::shared_ptr<char[]>, size_t> Message::Serialize() const {

@@ -1,4 +1,6 @@
-#include "server.hpp"
+#include "listener.hpp"
+
+#include <cstring>
 
 #ifdef DEBUG_OUTPUT
 #include <iostream>
@@ -7,9 +9,9 @@
 #define QUEUE_SIZE 16
 
 namespace cloud_storage::network {
-    Server::Server(std::string_view _port) {
+    Listener::Listener(std::string_view _port) {
         addrinfo hints;
-        ZeroMemory(&hints, sizeof(hints));
+        std::memset(&hints, 0, sizeof(hints));
 
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_family = AF_INET6;
@@ -64,7 +66,7 @@ namespace cloud_storage::network {
             // throw
         }
 
-        CopyMemory(&socket_info_.address, bind_address->ai_addr,
+        std::memcpy(&socket_info_.address, bind_address->ai_addr,
             bind_address->ai_addrlen);
 
         socket_info_.address_length = bind_address->ai_addrlen;
@@ -73,14 +75,14 @@ namespace cloud_storage::network {
         freeaddrinfo(bind_address);
     }
 
-    Server::~Server() {
+    Listener::~Listener() {
         if (socket_info_.socket != INVALID_SOCKET) {
             closesocket(socket_info_.socket);
         }
     }
 
-    Client Server::Accept() const {
-        Client new_client;
+    Connection Listener::Accept() const {
+        Connection new_client;
 
         new_client.socket_info_.socket = accept(socket_info_.socket,
             reinterpret_cast<sockaddr *>(&new_client.socket_info_.address),
