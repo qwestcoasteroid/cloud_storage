@@ -1,32 +1,31 @@
 #include "file_info.hpp"
 
 #include <cstring>
+#include <iostream>
 
 #include "help_tools.hpp"
 
 namespace cloud_storage::stored_data {
-    FileInfo::FileInfo(const network::Packet &_packet) {
-        if (_packet.GetHeader().data_type != network::DataType::kFile) {
-            // throw
-        }
-
-        Deserialize(_packet.GetData());
+    FileInfo::FileInfo(const network::NetworkBuffer &_buffer) {
+        Deserialize(_buffer);
     }
 
-    std::pair<std::shared_ptr<char[]>, size_t> FileInfo::Serialize() const {
-        std::shared_ptr<char[]> result;
+    network::NetworkBuffer FileInfo::Serialize() const {
+        network::NetworkBuffer result;
 
-        size_t data_size = sizeof(size) + 2 * sizeof(ULARGE_INTEGER) + name.size() + 1;
+        result.data_type = network::DataType::kFileInfo;
+
+        result.length = sizeof(size) + 2 * sizeof(ULARGE_INTEGER) + name.size() + 1;
         
-        result.reset(new char[data_size]);
+        result.buffer.reset(new char[result.length]);
 
-        char *data = result.get();
+        char *buffer_ptr = result.buffer.get();
 
-        std::strcpy(data, name.c_str());
-        data += name.size() + 1;
-        *reinterpret_cast<decltype(size) *>(data) =
+        std::strcpy(buffer_ptr, name.c_str());
+        buffer_ptr += name.size() + 1;
+        *reinterpret_cast<decltype(size) *>(buffer_ptr) =
             service::ToNetworkRepresentation(size);
-        data += sizeof(size);
+        buffer_ptr += sizeof(size);
 
         FILETIME filetime_creation_time, filetime_editing_time;
         ULARGE_INTEGER ulint_creation_time, ulint_editing_time;
@@ -39,21 +38,25 @@ namespace cloud_storage::stored_data {
         ulint_editing_time.HighPart = filetime_editing_time.dwHighDateTime;
         ulint_editing_time.LowPart = filetime_editing_time.dwLowDateTime;
 
-        *reinterpret_cast<decltype(ulint_creation_time.QuadPart) *>(data) =
+        *reinterpret_cast<decltype(ulint_creation_time.QuadPart) *>(buffer_ptr) =
             service::ToNetworkRepresentation(ulint_creation_time.QuadPart);
-        data += sizeof(ulint_creation_time.QuadPart);
-        *reinterpret_cast<decltype(ulint_editing_time.QuadPart) *>(data) =
+        buffer_ptr += sizeof(ulint_creation_time.QuadPart);
+        *reinterpret_cast<decltype(ulint_editing_time.QuadPart) *>(buffer_ptr) =
             service::ToNetworkRepresentation(ulint_editing_time.QuadPart);
 
-        return { result, data_size };
+        return result;
     }
 
-    FileInfo &FileInfo::Deserialize(const std::shared_ptr<char[]> &_buffer) {
-        if (_buffer == nullptr) {
+    FileInfo &FileInfo::Deserialize(const network::NetworkBuffer &_buffer) {
+        if (_buffer.buffer == nullptr) {
             return *this;
         }
 
-        const char *buffer_ptr = _buffer.get();
+        if (_buffer.data_type != network::DataType::kFileInfo) {
+            // throw
+        }
+
+        const char *buffer_ptr = _buffer.buffer.get();
 
         name = std::string(buffer_ptr);
         buffer_ptr += name.size() + 1;

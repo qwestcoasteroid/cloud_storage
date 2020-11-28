@@ -5,6 +5,7 @@ Primary:
         -Read/Write operations
     -Change string serialization method
     -Pass input buffer size to the 'Deserialize' method
+    -Fix 'library.cpp'
 
 Secondary:
     -Continue creating 'stored_data' classes

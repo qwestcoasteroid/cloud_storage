@@ -19,9 +19,9 @@
                 "${workspaceFolder}/network/source/network_reading_stream.cpp",
                 "${workspaceFolder}/network/source/network_writing_stream.cpp",
                 "${workspaceFolder}/network/source/protocol.cpp",
-                "${workspaceFolder}/stored_data/source/profile.cpp",
+                "${workspaceFolder}/stored_data/source/profile_info.cpp",
                 "${workspaceFolder}/stored_data/source/message.cpp",
-                "${workspaceFolder}/stored_data/source/file.cpp",
+                "${workspaceFolder}/stored_data/source/file_info.cpp",
                 "${workspaceFolder}/service/source/help_tools.cpp",
                 "${workspaceFolder}/server_main.cpp",
                 "-o",
@@ -33,7 +33,8 @@
                 "-march=native",
                 "-DWINVER=0x0501",
                 "-D_WIN32_WINNT=0x0501",
-                "-DIPV6_V6ONLY=27"
+                "-DIPV6_V6ONLY=27",
+                "-DDEBUG_OUTPUT"
             ],
             "problemMatcher": "$gcc"
         },
@@ -54,9 +55,9 @@
                 "${workspaceFolder}/network/source/network_reading_stream.cpp",
                 "${workspaceFolder}/network/source/network_writing_stream.cpp",
                 "${workspaceFolder}/network/source/protocol.cpp",
-                "${workspaceFolder}/stored_data/source/profile.cpp",
+                "${workspaceFolder}/stored_data/source/profile_info.cpp",
                 "${workspaceFolder}/stored_data/source/message.cpp",
-                "${workspaceFolder}/stored_data/source/file.cpp",
+                "${workspaceFolder}/stored_data/source/file_info.cpp",
                 "${workspaceFolder}/service/source/help_tools.cpp",
                 "${workspaceFolder}/client_main.cpp",
                 "-o",
@@ -68,7 +69,8 @@
                 "-march=native",
                 "-DWINVER=0x0501",
                 "-D_WIN32_WINNT=0x0501",
-                "-DIPV6_V6ONLY=27"
+                "-DIPV6_V6ONLY=27",
+                "-DDEBUG_OUTPUT"
             ],
             "problemMatcher": "$gcc"
         }

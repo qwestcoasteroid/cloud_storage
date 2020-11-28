@@ -3,76 +3,51 @@
 
 #include <memory>
 #include <string_view>
+#include <cstring>
 
 // TODO: MakeError - send error code instead of message
 
 namespace cloud_storage::network {
     enum class DataType : uint8_t {
-        kFile           = 0xFF, kQuery          = 0xFE,
+        kFileInfo       = 0xFF, kQuery          = 0xFE,
         kAuthorization  = 0xFD, kRegistration   = 0xFC,
-        kProfile        = 0xFB, kMessage        = 0xFA
+        kProfileInfo    = 0xFB, kMessage        = 0xFA
     };
 
     enum class ErrorCode : uint8_t {
-        kSuccess = 0x00
+        kSuccess = 0x00, kError = 0x01
     };
 
-    struct Header {
+    struct NetworkHeader {
+        uint32_t access_token{};
         uint32_t data_length{};
+        uint32_t user_id{};
         DataType data_type;
         ErrorCode error_code{ ErrorCode::kSuccess };
-        uint8_t respond : 1;
-        uint8_t fragment : 1;
-        uint8_t error : 1;
-    private:
-        uint8_t reserved_ : 5;
     };
 
-    class Packet {
-    public:
-        inline Packet() noexcept {}
-        inline virtual ~Packet() {}
-
-        Packet(Packet &&_packet) noexcept;
-        Packet &operator=(Packet &&_packet) noexcept;
-
-        inline const Header &GetHeader() const;
-        inline Header &GetHeader();
-        inline const std::shared_ptr<char[]> &GetData() const;
-        inline std::shared_ptr<char[]> &GetData();
-
-        inline void SetHeader(const Header &_header);
-        void SetData(const std::shared_ptr<char[]> &_buffer, size_t _size);
-
-    private:
-        Header header_;
-        std::shared_ptr<char[]> data_;
+    struct NetworkBuffer {
+        uint32_t length{};
+        std::shared_ptr<char[]> buffer;
+        DataType data_type;
     };
+
+    struct SessionInfo {
+        uint32_t access_token{};
+        uint32_t user_id{};
+    };
+
+    struct Packet {
+        NetworkHeader header;
+        std::shared_ptr<char[]> data;
+    };
+
+    void PackNetworkHeader(NetworkHeader &_header, bool _to_network) noexcept;
 
     Packet MakeRequest(DataType _type, std::string_view _resource);
     Packet MakeRespond(DataType _type,
         const std::shared_ptr<char[]> &_buffer, size_t _size);
     Packet MakeError(DataType _type, std::string_view _message);
-
-    const Header &Packet::GetHeader() const {
-        return header_;
-    }
-
-    Header &Packet::GetHeader() {
-        return header_;
-    }
-
-    const std::shared_ptr<char[]> &Packet::GetData() const {
-        return data_;
-    }
-
-    std::shared_ptr<char[]> &Packet::GetData() {
-        return data_;
-    }
-
-    void Packet::SetHeader(const Header &_header) {
-        header_ = _header;
-    }
 } // namespace cloud_storage::network
 
 #endif // CLOUD_STORAGE_NETWORK_PROTOCOL_HPP_

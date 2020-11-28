@@ -67,8 +67,6 @@ namespace cloud_storage::network {
         if (socket_info_.socket != INVALID_SOCKET) {
             closesocket(socket_info_.socket);
         }
-
-        socket_info_.socket = INVALID_SOCKET;
     }
 
     void Connection::Connect() const {

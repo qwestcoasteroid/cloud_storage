@@ -81,14 +81,14 @@ namespace cloud_storage::network {
         }
     }
 
-    Connection Listener::Accept() const {
-        Connection new_client;
+    std::unique_ptr<Connection> Listener::Accept() const {
+        auto new_client = std::make_unique<Connection>();
 
-        new_client.socket_info_.socket = accept(socket_info_.socket,
-            reinterpret_cast<sockaddr *>(&new_client.socket_info_.address),
-            &new_client.socket_info_.address_length);
+        new_client->socket_info_.socket = accept(socket_info_.socket,
+            reinterpret_cast<sockaddr *>(&new_client->socket_info_.address),
+            &new_client->socket_info_.address_length);
 
-        if (new_client.socket_info_.socket == INVALID_SOCKET) {
+        if (new_client->socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling accept() ("
                 << WSAGetLastError() << ")\n";
@@ -96,7 +96,7 @@ namespace cloud_storage::network {
             // throw
         }
 
-        new_client.socket_info_.socket_type = socket_info_.socket_type;
+        new_client->socket_info_.socket_type = socket_info_.socket_type;
 
         return new_client;
     }

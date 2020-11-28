@@ -2,56 +2,50 @@
 
 #include <cstring>
 
+#include "help_tools.hpp"
+
 namespace cloud_storage::network {
-    Packet::Packet(Packet &&_packet) noexcept :
-        header_(_packet.header_), data_(std::move(_packet.data_)) {}
-
-    Packet &Packet::operator=
-        (Packet &&_packet) noexcept {
-
-        if (&_packet == this) {
-            return *this;
-        }
-
-        header_ = _packet.header_;
-        data_ = std::move(_packet.data_);
-        
-        return *this;
-    }
-
-    void Packet::SetData(const std::shared_ptr<char[]> &_buffer,
-        size_t _size) {
-            
-        if (_size == 0) {
-            data_.reset();
-        }
-        else if (_buffer == nullptr) {
-            data_.reset(new char[_size]);
+    void PackNetworkHeader(NetworkHeader &_header, bool _to_network) noexcept {
+        if (_to_network) {
+            _header.access_token = service::ToNetworkRepresentation(
+                _header.access_token
+            );
+            _header.data_length = service::ToNetworkRepresentation(
+                _header.data_length
+            );
+            _header.user_id = service::ToNetworkRepresentation(
+                _header.user_id
+            );
         }
         else {
-            data_ = _buffer;
+            _header.access_token = service::ToHostRepresentation(
+                _header.access_token
+            );
+            _header.data_length = service::ToHostRepresentation(
+                _header.data_length
+            );
+            _header.user_id = service::ToHostRepresentation(
+                _header.user_id
+            );
         }
-        
-        header_.data_length = _size;
     }
 
     Packet MakeRequest(DataType _type, std::string_view _resource) {
         Packet result;
 
-        Header header;
+        NetworkHeader header;
 
         header.data_type = _type;
-        header.respond = 0;
-        header.error = 0;
+        header.error_code = ErrorCode::kSuccess;
 
-        result.SetHeader(header);
+        result.header = header;
 
-        result.SetData(nullptr, _resource.size() + 1);
+        result.data = std::make_shared<char[]>(_resource.size() + 1);
 
-        std::memcpy(result.GetData().get(), _resource.data(),
+        std::memcpy(result.data.get(), _resource.data(),
             _resource.size());
 
-        result.GetData().get()[_resource.size()] = '\0';
+        result.data[_resource.size()] = '\0';
 
         return  result;
     }
@@ -61,24 +55,23 @@ namespace cloud_storage::network {
 
         Packet result;
 
-        Header header;
+        NetworkHeader header;
 
         header.data_type = _type;
-        header.respond = 1;
-        header.error = 0;
+        header.data_length = _size;
+        header.error_code = ErrorCode::kSuccess;
 
-        result.SetHeader(header);
+        result.header = header;
         
-        result.SetData(_buffer, _size);
-
+        result.data = _buffer;
+        
         return result;
     }
 
     Packet MakeError(DataType _type, std::string_view _message) {
         Packet result = MakeRequest(_type, _message);
 
-        result.GetHeader().error = 1;
-        result.GetHeader().respond = 1;
+        result.header.error_code = ErrorCode::kError;
 
         return result;
     }

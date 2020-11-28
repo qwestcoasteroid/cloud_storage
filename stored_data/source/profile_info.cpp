@@ -5,26 +5,24 @@
 #include "help_tools.hpp"
 
 namespace cloud_storage::stored_data {
-    ProfileInfo::ProfileInfo(const network::Packet &_packet) {
-        if (_packet.GetHeader().data_type != network::DataType::kProfile) {
-            // throw
-        }
-
-        Deserialize(_packet.GetData());
+    ProfileInfo::ProfileInfo(const network::NetworkBuffer &_buffer) {
+        Deserialize(_buffer);
     }
 
-    std::pair<std::shared_ptr<char[]>, size_t> ProfileInfo::Serialize() const {
-        std::shared_ptr<char[]> result;
+    network::NetworkBuffer ProfileInfo::Serialize() const {
+        network::NetworkBuffer result;
 
-        size_t data_size = 0;
+        result.data_type = network::DataType::kProfileInfo;
 
-        data_size += username.size() + 1;
-        data_size += sizeof(max_storage);
-        data_size += sizeof(used_storage);
+        result.length = 0;
 
-        result.reset(new char[data_size]);
+        result.length += username.size() + 1;
+        result.length += sizeof(max_storage);
+        result.length += sizeof(used_storage);
 
-        char *buffer = result.get();
+        result.buffer.reset(new char[result.length]);
+
+        char *buffer = result.buffer.get();
 
         std::strcpy(buffer, username.c_str());
         buffer += username.size() + 1;
@@ -34,15 +32,19 @@ namespace cloud_storage::stored_data {
         *reinterpret_cast<decltype(used_storage) *>(buffer) =
             service::htonll(used_storage);
 
-        return { result, data_size };
+        return result;
     }
 
-    ProfileInfo &ProfileInfo::Deserialize(const std::shared_ptr<char[]> &_buffer) {
-        if (_buffer == nullptr) {
+    ProfileInfo &ProfileInfo::Deserialize(const network::NetworkBuffer &_buffer) {
+        if (_buffer.buffer == nullptr) {
             return *this;
         }
 
-        const char *buffer_ptr = _buffer.get();
+        if (_buffer.data_type != network::DataType::kProfileInfo) {
+            // throw
+        }
+
+        const char *buffer_ptr = _buffer.buffer.get();
 
         username = std::string(buffer_ptr);
         buffer_ptr += username.size() + 1;

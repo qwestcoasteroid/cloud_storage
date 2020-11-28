@@ -15,38 +15,38 @@ namespace cloud_storage::network {
             return;
         }
 
-        int sent{ 0 };
-
         do {
             int result = send(_socket, _buffer, _size, 0);
+
+            DWORD err = WSAGetLastError();
 
             if (result < 0) {
 #ifdef DEBUG_OUTPUT
                 std::cerr << "Error calling send() ("
-                    << WSAGetLastError() << ")\n";
+                    << WSAGetLastError() << ")" << std::endl;
 #endif // DEBUG_OUTPUT
                 throw std::runtime_error("error");
                 // throw
             }
 
-            sent += result;
+            _buffer += result;
+            _size -= result;
 
-        } while (static_cast<size_t>(sent) != _size);
+        } while (_size != 0);
     }
 
     void PerformStreamWriting(const SocketInfo &_socket_info,
         const Packet &_packet) {
 
-        Header header = _packet.GetHeader();
+        NetworkHeader header = _packet.header;
         
-        header.data_length =
-            service::ToNetworkRepresentation(header.data_length);
+        PackNetworkHeader(header, true);
         
         SendDataStream(_socket_info.socket,
             reinterpret_cast<const char *>(&header), sizeof(header));
         
-        SendDataStream(_socket_info.socket, _packet.GetData().get(),
-            _packet.GetHeader().data_length);
+        SendDataStream(_socket_info.socket, _packet.data.get(),
+            _packet.header.data_length);
     }
 
     void NetworkWritingStream::Write(const Packet &_packet) {

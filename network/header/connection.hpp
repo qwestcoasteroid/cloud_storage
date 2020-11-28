@@ -8,6 +8,7 @@
 namespace cloud_storage::network {
     class Connection : public NetworkObject {
     public:
+        inline Connection() noexcept {};
         Connection(std::string_view _ip_address, std::string_view _port);
 
         Connection(Connection &&_client) noexcept;
@@ -21,10 +22,7 @@ namespace cloud_storage::network {
         inline bool operator==(const Connection &_object) const noexcept;
         inline bool operator!=(const Connection &_object) const noexcept;
 
-        friend class Listener;
-
-    private:
-        inline Connection() noexcept {};
+        friend class Listener;   
     };
 
     bool Connection::operator==(const Connection &_object) const noexcept {

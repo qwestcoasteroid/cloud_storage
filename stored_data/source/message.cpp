@@ -3,39 +3,41 @@
 #include <cstring>
 
 namespace cloud_storage::stored_data {
-    Message::Message(const network::Packet &_packet) {
-        if (_packet.GetHeader().data_type != network::DataType::kMessage) {
-            // throw
-        }
-
-        Deserialize(_packet.GetData());
+    Message::Message(const network::NetworkBuffer &_buffer) {
+        Deserialize(_buffer);
     }
 
-    std::pair<std::shared_ptr<char[]>, size_t> Message::Serialize() const {
-        std::shared_ptr<char[]> result;
+    network::NetworkBuffer Message::Serialize() const {
+        network::NetworkBuffer result;
 
-        size_t data_size = 0;
+        result.data_type = network::DataType::kMessage;
 
-        data_size += msg.size() + 1;
-        data_size += sender.size() + 1;
+        result.length = 0;
 
-        result.reset(new char[data_size]);
+        result.length += msg.size() + 1;
+        result.length += sender.size() + 1;
 
-        char *buffer = result.get();
+        result.buffer.reset(new char[result.length]);
 
-        std::strcpy(buffer, msg.c_str());
-        buffer += msg.size() + 1;
-        std::strcpy(buffer, sender.c_str());
+        char *buffer_ptr = result.buffer.get();
 
-        return { result, data_size };
+        std::strcpy(buffer_ptr, msg.c_str());
+        buffer_ptr += msg.size() + 1;
+        std::strcpy(buffer_ptr, sender.c_str());
+
+        return result;
     }
 
-    Message &Message::Deserialize(const std::shared_ptr<char[]> &_buffer) {
-        if (_buffer == nullptr) {
+    Message &Message::Deserialize(const network::NetworkBuffer &_buffer) {
+        if (_buffer.buffer == nullptr) {
             return *this;
         }
 
-        const char *buffer_ptr = _buffer.get();
+        if (_buffer.data_type != network::DataType::kMessage) {
+            // throw
+        }
+
+        const char *buffer_ptr = _buffer.buffer.get();
 
         msg = std::string(buffer_ptr);
         buffer_ptr += msg.size() + 1;

@@ -13,10 +13,10 @@ namespace cloud_storage::stored_data {
         using uint64_t = unsigned long long;
     public:
         inline FileInfo() noexcept {}
-        FileInfo(const network::Packet &_packet);
+        FileInfo(const network::NetworkBuffer &_packet);
 
-        std::pair<std::shared_ptr<char[]>, size_t> Serialize() const override;
-        FileInfo &Deserialize(const std::shared_ptr<char[]> &_buffer) override;
+        network::NetworkBuffer Serialize() const override;
+        FileInfo &Deserialize(const network::NetworkBuffer &_buffer) override;
 
         std::string name;
         uint64_t size{};

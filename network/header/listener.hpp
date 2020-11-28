@@ -2,6 +2,7 @@
 #define CLOUD_STORAGE_NETWORK_SERVER_HPP_
 
 #include <string_view>
+#include <memory>
 
 #include "network_object.hpp"
 #include "connection.hpp"
@@ -13,7 +14,7 @@ namespace cloud_storage::network {
 
         ~Listener();
 
-        Connection Accept() const;
+        std::unique_ptr<Connection> Accept() const;
     };
 } // namespace cloud_storage::network
 

@@ -14,10 +14,10 @@ namespace cloud_storage::network {
             return;
         }
 
-        int received{ 0 };
-
         do {
             int result = recv(_socket, _buffer, _size, 0);
+
+            DWORD err = WSAGetLastError();
 
             if (result == 0) {
 #ifdef DEBUG_OUTPUT
@@ -35,25 +35,25 @@ namespace cloud_storage::network {
                 // throw
             }
 
-            received += result;
+            _buffer += result;
+            _size -= result;
 
-        } while (static_cast<size_t>(received) != _size);
+        } while (_size != 0);
     }
 
     void PerformStreamReading(const SocketInfo &_socket_info,
         Packet &_packet) {
 
         ReceiveDataStream(_socket_info.socket,
-            reinterpret_cast<char *>(&_packet.GetHeader()),
-            sizeof(_packet.GetHeader()));
+            reinterpret_cast<char *>(&_packet.header),
+            sizeof(_packet.header));
 
-        _packet.GetHeader().data_length =
-            service::ToHostRepresentation(_packet.GetHeader().data_length);
+        PackNetworkHeader(_packet.header, false);
 
-        _packet.SetData(nullptr, _packet.GetHeader().data_length);
+        _packet.data = std::shared_ptr<char[]>(new char[_packet.header.data_length]);
 
-        ReceiveDataStream(_socket_info.socket, _packet.GetData().get(),
-            _packet.GetHeader().data_length);
+        ReceiveDataStream(_socket_info.socket, _packet.data.get(),
+            _packet.header.data_length);
     }
 
     Packet NetworkReadingStream::Read() {
