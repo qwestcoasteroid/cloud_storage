@@ -1,9 +1,7 @@
 #ifndef CLOUD_STORAGE_NETWORK_LIBRARY_HPP_
 #define CLOUD_STORAGE_NETWORK_LIBRARY_HPP_
 
-#include "targetver.hpp"
-
-#include <winsock2.h>
+#include <WinSock2.h>
 
 namespace cloud_storage::network {
     class Library {

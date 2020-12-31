@@ -1,168 +1,105 @@
-#include <windows.h>
+#include <Windows.h>
 
 #include <iostream>
+#include <cstring>
 
+#include "protocol.hpp"
 #include "listener.hpp"
 #include "connection.hpp"
 #include "file_info.hpp"
-#include "network_writing_stream.hpp"
-#include "network_reading_stream.hpp"
+#include "file_upload.hpp"
+#include "file_download.hpp"
+#include "file_part.hpp"
+#include "network_stream.hpp"
+#include "exceptions.hpp"
+#include "file_operations.hpp"
 
-#define FRAGMENT_SIZE (64 * (1 << 10))
+cloud_storage::messages::FileUploadResponse CreateFileUploadResponse(
+    const cloud_storage::messages::FileUploadRequest &_request
+);
+
+cloud_storage::messages::FileDownloadResponse CreateFileDownloadResponse(
+    const cloud_storage::messages::FileDownloadRequest &_request
+);
 
 DWORD WINAPI ClientHandler(void *_client) {
-    using cloud_storage::network::Connection;
-    using cloud_storage::network::Packet;
-    using cloud_storage::network::NetworkReadingStream;
-    using cloud_storage::network::NetworkWritingStream;
-    using cloud_storage::network::DataType;
+    using namespace cloud_storage::network;
+    using namespace cloud_storage::messages;
+
+    std::string dir("F:\\cloud_storage_test\\cloud_directory\\");
 
     std::unique_ptr<Connection> connection(
         reinterpret_cast<Connection *>(_client)
     );
 
-    NetworkReadingStream reader(*connection);
-    NetworkWritingStream writer(*connection);
+    NetworkStream stream(*connection);
 
     do {
         Packet unit;
 
         try {
-            unit = reader.Read();
+            unit = stream.Read();
         }
-        catch (...) {
-            std::cout << "Client " << _client << " disconnected!\n";
-
+        catch (exceptions::ConnectionClosed &e) {
+            std::cout << "Client [" << _client << "] disconnected!\n";
             connection->Disconnect();
-
+            return 0;
+        }
+        catch (exceptions::SocketError &e) {
+            std::cout << "Error [" << e.GetErrorCode() << "] ocurred!\n";
             return 0;
         }
 
-        if (unit.header.data_type == DataType::kFileInfo) {
-            cloud_storage::network::NetworkBuffer net_buf;
-
-            std::cout << "File requested!\n";
-
-            net_buf.buffer = unit.data;
-            net_buf.data_type = unit.header.data_type;
-            net_buf.length = unit.header.data_length;
-
-            std::cout << "Allocating disk space!" << std::endl;
-
-            cloud_storage::stored_data::FileInfo file_req(net_buf);
-
-            std::cout << "File name: " << file_req.name << std::endl;
-
-            std::string dir("F:\\client_dir\\");
-
-            HANDLE requested_file = CreateFile((dir + file_req.name).c_str(),
-                GENERIC_WRITE | GENERIC_READ, 0, NULL, CREATE_ALWAYS,
-                FILE_ATTRIBUTE_NORMAL, NULL
+        switch (unit.header.message_id) {
+        case MessageID::kFileUploadRequest: {
+            FileUploadRequest request(
+                CreateNetworkBuffer(unit)
             );
-
-            std::cout << "File created!" << std::endl;
-
-            Packet answer;
-
-            answer.header.data_length = 0;
-            answer.header.data_type =
-                cloud_storage::network::DataType::kFileInfo;
-
-            if (requested_file == INVALID_HANDLE_VALUE) {
-                answer.header.error_code =
-                    cloud_storage::network::ErrorCode::kError;
-
-                std::cout << "Error opening file! " <<
-                    GetLastError() << std::endl;
-
-                writer.Write(answer);
-
-                continue;
-            }
-
-            std::cout << "Sending answer!" << std::endl;
-
-            answer.header.error_code =
-                cloud_storage::network::ErrorCode::kSuccess;
-
-            answer.data = std::make_shared<char[]>(0);
-
-            writer.Write(answer);
-
-            std::cout << "Mapping file!" << std::endl;
-
-            LARGE_INTEGER file_size{};
-            file_size.QuadPart = file_req.size;
-
-            SetFilePointerEx(requested_file, file_size, NULL, FILE_BEGIN);
-
-            SetEndOfFile(requested_file);
-
-            HANDLE file_map = CreateFileMapping(requested_file, NULL,
-                PAGE_READWRITE, 0, 0, NULL);
-
-            DWORD err = GetLastError();
-
-            LPVOID file_ptr = MapViewOfFile(file_map, FILE_MAP_WRITE, 0, 0, 0);
-
-            LPSTR tmp_file_ptr = reinterpret_cast<LPSTR>(file_ptr);
-
-            size_t recvd = 0;
-
-            bool fail = false;
-
-            std::cout << "Receiving file: " << file_req.name << std::endl;
-
-            std::streamsize field_size = std::to_string(file_req.size).size();
-
-            do {
-                try {
-                    unit = reader.Read();
-                }
-                catch (...) {
-                    fail = true;
-                    break;
-                }
-                
-
-                if (unit.header.error_code !=
-                    cloud_storage::network::ErrorCode::kSuccess) {
-
-                }
-
-                std::memcpy(tmp_file_ptr, unit.data.get(),
-                    unit.header.data_length
+            auto response = CreateFileUploadResponse(request);
+            AppendPacket(unit, response.Serialize());
+            try {
+                stream.Write(unit);
+                std::cout << "Receiving file from [" << _client << "]...\n";
+                ReceiveFile(dir + request.name, request.size,
+                    response.chunk_size, stream
                 );
-
-                tmp_file_ptr += unit.header.data_length;
-
-                recvd += unit.header.data_length;
-                
-                std::cout << "Received: ";
-                std::cout.width(field_size);
-                std::cout << recvd;
-                std::cout <<  " of ";
-                std::cout.width(field_size);
-                std::cout << file_req.size << '\r';
-                
-            } while (recvd != file_req.size);
-
-            std::cout << std::endl;
-
-            connection->Disconnect();
-
-            // FlushViewOfFile(file_ptr, 0);
-            UnmapViewOfFile(file_ptr);
-            CloseHandle(file_map);
-            CloseHandle(requested_file);
-
-            if (fail) {
-                DeleteFileA((dir + file_req.name).c_str());
+            }
+            catch (exceptions::ConnectionClosed &e) {
+                std::cout << "Client [" << _client << "] disconnected!\n";
+                connection->Disconnect();
+                return 0;
+            }
+            catch (exceptions::SocketError &e) {
+                std::cout << "Error [" << e.GetErrorCode() << "] ocurred!\n";
+                return 0;
             } 
+            break;
         }
-
-        std::cout << "File received! in [" << GetCurrentThreadId()
-            << "] thread." << std::endl;
+        case MessageID::kFileDownloadRequest: {
+            FileDownloadRequest request(
+                CreateNetworkBuffer(unit)
+            );
+            auto response = CreateFileDownloadResponse(request);
+            AppendPacket(unit, response.Serialize());
+            try {
+                stream.Write(unit);
+                std::cout << "Sending file to [" << _client << "]...\n";
+                SendFile(dir + response.name, response.size,
+                    response.chunk_size, stream
+                );
+            }
+            catch (exceptions::SocketError &e) {
+                std::cout << "Error [" << e.GetErrorCode() << "] ocurred!\n";
+                return 0;
+            } 
+            break;
+        }
+        default:
+            std::cout << "Unknown request from client ["
+                << _client << "]!\n";
+            connection->Disconnect();
+            return 0;
+        }
 
     } while (true);
 
@@ -183,12 +120,73 @@ int main() {
             sizeof(ipaddr), nullptr, 0, NI_NUMERICHOST
         );
 
-        std::cout << "Client [" << ipaddr << "] connected!\n\n";
+        std::cout << "Client [" << ipaddr << "] connected!\n";
 
         QueueUserWorkItem(ClientHandler, connection.release(),
-            WT_EXECUTELONGFUNCTION);
+            WT_EXECUTELONGFUNCTION
+        );
 
     } while (true);
 
     return 0;
+}
+
+cloud_storage::messages::FileUploadResponse CreateFileUploadResponse(
+    const cloud_storage::messages::FileUploadRequest &_request) {
+
+    cloud_storage::messages::FileUploadResponse result;
+
+    result.name = _request.name;
+
+    ULARGE_INTEGER free_space{};
+    
+    GetDiskFreeSpaceExA("F:\\", &free_space, NULL, NULL);
+
+    if (free_space.QuadPart < _request.size) {
+        result.difference = _request.size - free_space.QuadPart;
+    }
+
+    SYSTEM_INFO sys_info{};
+
+    GetSystemInfo(&sys_info);
+
+    result.chunk_size = sys_info.dwAllocationGranularity;
+
+    return result;
+}
+
+cloud_storage::messages::FileDownloadResponse CreateFileDownloadResponse(
+    const cloud_storage::messages::FileDownloadRequest &_request) {
+
+    cloud_storage::messages::FileDownloadResponse result;
+
+    std::string full_path("F:\\cloud_storage_test\\cloud_directory\\");
+
+    full_path.append(_request.name);
+
+    HANDLE file = CreateFileA(full_path.c_str(), GENERIC_READ,
+        0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+    );
+
+    if (file == INVALID_HANDLE_VALUE) {
+        return result;
+    }
+
+    result.name = _request.name;
+
+    LARGE_INTEGER file_size{};
+
+    GetFileSizeEx(file, &file_size);
+
+    result.size = file_size.QuadPart;
+
+    SYSTEM_INFO sys_info{};
+
+    GetSystemInfo(&sys_info);
+
+    result.chunk_size = sys_info.dwAllocationGranularity;
+
+    CloseHandle(file);
+
+    return result;
 }

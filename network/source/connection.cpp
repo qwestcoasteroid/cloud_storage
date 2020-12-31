@@ -6,6 +6,11 @@
 #include <iostream>
 #endif // DEBUG_OUTPUT
 
+#include "exceptions.hpp"
+
+static constexpr uint16_t kReceiveBufferSize = (1 << 10) * 8;
+static constexpr uint16_t kSendBufferSize    = (1 << 10) * 8;
+
 namespace cloud_storage::network {
     Connection::Connection(std::string_view _ip_address, std::string_view _port) {
         addrinfo hints;
@@ -20,7 +25,7 @@ namespace cloud_storage::network {
             std::cerr << "Error calling getaddrinfo() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         socket_info_.socket = socket(peer_address->ai_family,
@@ -31,8 +36,18 @@ namespace cloud_storage::network {
             std::cerr << "Error calling socket() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
+
+        setsockopt(socket_info_.socket, SOL_SOCKET, SO_RCVBUF,
+            reinterpret_cast<const char *>(&kReceiveBufferSize),
+            sizeof(kReceiveBufferSize)
+        );
+
+        setsockopt(socket_info_.socket, SOL_SOCKET, SO_SNDBUF,
+            reinterpret_cast<const char *>(&kSendBufferSize),
+            sizeof(kSendBufferSize)
+        );
 
         std::memcpy(&socket_info_.address, peer_address->ai_addr,
             peer_address->ai_addrlen);
@@ -43,22 +58,23 @@ namespace cloud_storage::network {
         freeaddrinfo(peer_address);
     }
 
-    Connection::Connection(Connection &&_client) noexcept {
-        std::memcpy(&socket_info_, &_client.socket_info_,
+    Connection::Connection(Connection &&_other) noexcept {
+
+        std::memcpy(&socket_info_, &_other.socket_info_,
             sizeof(socket_info_));
 
-        _client.socket_info_.socket = INVALID_SOCKET;
+        _other.socket_info_.socket = INVALID_SOCKET;
     }
 
-    Connection& Connection::operator=(Connection &&_client) noexcept {
-        if (this == &_client) {
+    Connection& Connection::operator=(Connection &&_other) noexcept {
+        if (this == &_other) {
             return *this;
         }
 
-        std::memcpy(&socket_info_, &_client.socket_info_,
+        std::memcpy(&socket_info_, &_other.socket_info_,
             sizeof(socket_info_));
 
-        _client.socket_info_.socket = INVALID_SOCKET;
+        _other.socket_info_.socket = INVALID_SOCKET;
 
         return *this;
     }
@@ -77,7 +93,7 @@ namespace cloud_storage::network {
             std::cerr << "Error calling connect() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
     }
 
@@ -87,7 +103,7 @@ namespace cloud_storage::network {
             std::cerr << "Error calling shutdown() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
     }
 }; // namespace cloud_storage::network

@@ -18,16 +18,6 @@ namespace cloud_storage::network {
         case WSAVERNOTSUPPORTED:
             WSAStartup(MAKEWORD(LOBYTE(wsa_.wHighVersion),
                 HIBYTE(wsa_.wHighVersion)), &wsa_);
-            if (LOBYTE(wsa_.wHighVersion) != EXPECTED_WSA_VERSION_MAJOR ||
-                HIBYTE(wsa_.wHighVersion) != EXPECTED_WSA_VERSION_MINOR) {
-                WSACleanup();
-#ifdef DEBUG_OUTPUT
-                std::cerr << "Expected version of WSA ("
-                    << EXPECTED_WSA_VERSION_MAJOR << "."
-                    << EXPECTED_WSA_VERSION_MINOR << ") isn't supported!\n";
-#endif // DEBUG_OUTPUT
-                // throw
-            }
             break;
         case WSASYSNOTREADY:
 #ifdef DEBUG_OUTPUT

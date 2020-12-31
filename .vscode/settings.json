@@ -44,7 +44,11 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "typeinfo": "cpp",
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "iomanip": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp"
     },
     "editor.fontSize": 17
 }

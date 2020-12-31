@@ -1,7 +1,7 @@
 #ifndef CLOUD_STORAGE_NETWORK_NETWORK_OBJECT_HPP
 #define CLOUD_STORAGE_NETWORK_NETWORK_OBJECT_HPP
 
-#include <winsock2.h>
+#include <WinSock2.h>
 #include <ws2tcpip.h>
 
 namespace cloud_storage::network {

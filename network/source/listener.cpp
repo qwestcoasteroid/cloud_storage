@@ -6,6 +6,8 @@
 #include <iostream>
 #endif // DEBUG_OUTPUT
 
+#include "exceptions.hpp"
+
 #define QUEUE_SIZE 16
 
 namespace cloud_storage::network {
@@ -24,18 +26,19 @@ namespace cloud_storage::network {
             std::cerr << "Error calling getaddrinfo() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         socket_info_.socket = socket(bind_address->ai_family,
-            bind_address->ai_socktype, bind_address->ai_protocol);
+            bind_address->ai_socktype, bind_address->ai_protocol
+        );
 
         if (socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling socket() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         int option = 0;
@@ -46,7 +49,7 @@ namespace cloud_storage::network {
             std::cerr << "Error calling setsockopt() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         if (bind(socket_info_.socket, bind_address->ai_addr,
@@ -55,7 +58,7 @@ namespace cloud_storage::network {
             std::cerr << "Error calling bind() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         if (listen(socket_info_.socket, QUEUE_SIZE) < 0) {
@@ -63,11 +66,12 @@ namespace cloud_storage::network {
             std::cerr << "Error calling listen() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         std::memcpy(&socket_info_.address, bind_address->ai_addr,
-            bind_address->ai_addrlen);
+            bind_address->ai_addrlen
+        );
 
         socket_info_.address_length = bind_address->ai_addrlen;
         socket_info_.socket_type = bind_address->ai_socktype;
@@ -86,14 +90,15 @@ namespace cloud_storage::network {
 
         new_client->socket_info_.socket = accept(socket_info_.socket,
             reinterpret_cast<sockaddr *>(&new_client->socket_info_.address),
-            &new_client->socket_info_.address_length);
+            &new_client->socket_info_.address_length
+        );
 
         if (new_client->socket_info_.socket == INVALID_SOCKET) {
 #ifdef DEBUG_OUTPUT
             std::cerr << "Error calling accept() ("
                 << WSAGetLastError() << ")\n";
 #endif // DEBUG_OUTPUT
-            // throw
+            throw exceptions::SocketError(WSAGetLastError());
         }
 
         new_client->socket_info_.socket_type = socket_info_.socket_type;

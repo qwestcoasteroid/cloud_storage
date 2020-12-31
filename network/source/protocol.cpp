@@ -5,73 +5,27 @@
 #include "help_tools.hpp"
 
 namespace cloud_storage::network {
-    void PackNetworkHeader(NetworkHeader &_header, bool _to_network) noexcept {
-        if (_to_network) {
-            _header.access_token = service::ToNetworkRepresentation(
-                _header.access_token
-            );
-            _header.data_length = service::ToNetworkRepresentation(
-                _header.data_length
-            );
-            _header.user_id = service::ToNetworkRepresentation(
-                _header.user_id
-            );
-        }
-        else {
-            _header.access_token = service::ToHostRepresentation(
-                _header.access_token
-            );
-            _header.data_length = service::ToHostRepresentation(
-                _header.data_length
-            );
-            _header.user_id = service::ToHostRepresentation(
-                _header.user_id
-            );
-        }
+    void SwitchByteOrder(NetworkHeader &_header) noexcept {
+        _header.access_token =
+            service::ByteOrderSwitcher::Switch(_header.access_token);
+        _header.data_length =
+            service::ByteOrderSwitcher::Switch(_header.data_length);
+        _header.user_id =
+            service::ByteOrderSwitcher::Switch(_header.user_id);
     }
 
-    Packet MakeRequest(DataType _type, std::string_view _resource) {
-        Packet result;
-
-        NetworkHeader header;
-
-        header.data_type = _type;
-        header.error_code = ErrorCode::kSuccess;
-
-        result.header = header;
-
-        result.data = std::make_shared<char[]>(_resource.size() + 1);
-
-        std::memcpy(result.data.get(), _resource.data(),
-            _resource.size());
-
-        result.data[_resource.size()] = '\0';
-
-        return  result;
+    void AppendPacket(Packet &_packet, const NetworkBuffer &_buffer) noexcept {
+        _packet.header.message_id = _buffer.message_id;
+        _packet.header.data_length = _buffer.length;
+        _packet.data = _buffer.buffer;
     }
 
-    Packet MakeRespond(DataType _type,
-        const std::shared_ptr<char[]> &_buffer, size_t _size) {
+    NetworkBuffer CreateNetworkBuffer(const Packet &_packet) noexcept {
+        NetworkBuffer result;
 
-        Packet result;
-
-        NetworkHeader header;
-
-        header.data_type = _type;
-        header.data_length = _size;
-        header.error_code = ErrorCode::kSuccess;
-
-        result.header = header;
-        
-        result.data = _buffer;
-        
-        return result;
-    }
-
-    Packet MakeError(DataType _type, std::string_view _message) {
-        Packet result = MakeRequest(_type, _message);
-
-        result.header.error_code = ErrorCode::kError;
+        result.buffer = _packet.data;
+        result.length = _packet.header.data_length;
+        result.message_id = _packet.header.message_id;
 
         return result;
     }
