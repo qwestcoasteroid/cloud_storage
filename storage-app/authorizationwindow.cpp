@@ -99,11 +99,15 @@ void AuthorizationWindow::confirmOperation() {
 }
 
 void AuthorizationWindow::registrateAccount() {
-    if (ui->loginEdit->text().size() == 0 || ui->passwordEdit->text().size() == 0) {
+    if (ui->loginEdit->text().size() == 0 ||
+        ui->passwordEdit->text().size() == 0) {
+
         QMessageBox::warning(this, "Ошибка", "Введите логин и пароль");
         return;
     }
-    if (ui->passwordEdit->text() != ui->passwordConfirmEdit->text()) {
+    if (ui->passwordEdit->text() !=
+        ui->passwordConfirmEdit->text()) {
+
         QMessageBox::warning(this, "Ошибка", "Пароли должны совпадать");
         return;
     }
@@ -112,14 +116,19 @@ void AuthorizationWindow::registrateAccount() {
         return;
     }
 
-    auto request = new RegistrationRequest(ui->loginEdit->text(), ui->passwordEdit->text(),
-                                           ui->tariffComboBox->currentText().section(' ', 0, 0));
+    auto request = new RegistrationRequest(ui->loginEdit->text(),
+                                           ui->passwordEdit->text(),
+                                           ui->tariffComboBox->
+                                           currentText().section(' ', 0, 0));
 
-    connect(request, &RegistrationRequest::error, request, &RegistrationRequest::deleteLater);
-    connect(request, &RegistrationRequest::complete, request, &RegistrationRequest::deleteLater);
-    connect(request, &RegistrationRequest::error, this, &AuthorizationWindow::showError);
-    connect(request, &RegistrationRequest::complete, this, &AuthorizationWindow::finishRegistration);
-
+    connect(request, &RegistrationRequest::error,
+            request, &RegistrationRequest::deleteLater);
+    connect(request, &RegistrationRequest::complete,
+            request, &RegistrationRequest::deleteLater);
+    connect(request, &RegistrationRequest::error,
+            this, &AuthorizationWindow::showError);
+    connect(request, &RegistrationRequest::complete,
+            this, &AuthorizationWindow::finishRegistration);
 
     request->execute();
 }

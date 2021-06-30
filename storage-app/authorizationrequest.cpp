@@ -25,7 +25,11 @@ void AuthorizationRequest::onPacketReady(std::shared_ptr<NetworkPacket> newPacke
 
     StorageInfo::get()->accountName = login;
 
-    ReadCryptoKey(login + ".crypt");
+    try {
+        ReadCryptoKey(login + ".crypt");
+    }  catch (std::runtime_error &e) {
+        emit error(new QString(e.what()));
+    }
 
     emit complete();
 }

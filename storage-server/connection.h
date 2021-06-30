@@ -2,6 +2,7 @@
 #define CONNECTION_H
 
 #include <QtNetwork/QTcpSocket>
+#include <QtNetwork/QHostAddress>
 
 #include <memory>
 
@@ -35,6 +36,7 @@ private:
     QTcpSocket *socket;
     NetworkReader *reader;
     NetworkWriter *writer;
+    QHostAddress address;
 };
 
 #endif // CONNECTION_H

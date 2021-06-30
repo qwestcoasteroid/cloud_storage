@@ -24,13 +24,15 @@ Connection::Connection(quintptr socketDescriptor, QObject *parent) :
 
     socket->setSocketDescriptor(socketDescriptor);
 
-    qDebug() << QString("Client connected [%1:%2]").arg(socket->peerAddress().toString()).arg(socket->peerPort());
+    address = socket->peerAddress();
+
+    qDebug() << QString("Client connected [%1]").arg(address.toString());
 
     connect(socket, &QTcpSocket::disconnected, this, &Connection::forwardDisconnect);
 }
 
 Connection::~Connection() {
-    qDebug() << QString("Client disconnected [%1:%2]").arg(socket->peerAddress().toString()).arg(socket->peerPort());
+    qDebug() << QString("Client disconnected [%1]").arg(address.toString());
 
     if (socket->isOpen()) {
         socket->close();

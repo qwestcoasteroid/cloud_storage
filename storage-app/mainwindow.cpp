@@ -15,6 +15,8 @@
 #include "downloadfilerequest.h"
 #include "deletefilerequest.h"
 
+#define TO_GiB(x) (x / (1 << 30))
+
 void MainWindow::addTableItem(const StorageFileStructure &file) {
     int column{};
 
@@ -57,7 +59,7 @@ void MainWindow::setProfileInfo(QByteArray *data) {
     stream >> response;
 
     ui->accountNameLabel->setText(response.name);
-    ui->freeSpaceAmountLabel->setText(QString::number(response.freeSpace));
+    ui->freeSpaceAmountLabel->setText(QString::number(TO_GiB((double)response.freeSpace), 'g', 4) + " GiB");
     ui->filesAmountLabel->setText(QString::number(response.files));
 }
 

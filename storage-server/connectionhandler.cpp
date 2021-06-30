@@ -327,7 +327,7 @@ void ConnectionHandler::handleTariffs() {
     auto writer = connection->getWriter();
 
     if (result.empty()) {
-        responseStream << QString("Invalid access token!");
+        responseStream << QString("No tariffs available!");
         writer->write(MessageID::Error, &response);
         isHandled = true;
         return;
@@ -419,7 +419,7 @@ void ConnectionHandler::onPacketReady(std::shared_ptr<NetworkPacket> newPacket) 
     }
 
     if (isHandled) {
-        qDebug() << QString("%1 Handled [%2]").arg(messageStrings[id]).arg(loginString);
+        qDebug() << QString("%1 is Processed [%2]").arg(messageStrings[id]).arg(loginString);
         emit handled();
     }
 }

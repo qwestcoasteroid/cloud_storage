@@ -29,9 +29,6 @@ int FileWriter::write(const QByteArray &bytes) {
 }
 
 FileWriter::~FileWriter() {
-    qDebug() << "Initial file size: " << initialSize;
-    qDebug() << "Actual file size: " << file.size();
-
     if (file.isOpen()) {
         if (initialSize != 0 && initialSize > file.size()) {
             file.remove();
